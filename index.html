@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="night">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GATE CS 2027 — Night Observatory</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+
+  <!-- Celebration Particle Canvas (Non-blocking micro-moments) -->
+  <canvas id="celebration-canvas"></canvas>
+
+  <div class="app-layout">
+
+    <!-- ==================================================================== -->
+    <!-- SLIM LEFT SIDEBAR -->
+    <!-- ==================================================================== -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <a href="#today" class="brand-wrapper" id="brand-link">
+          <div class="brand-glyph" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 3v18M3 12h18M12 8l4 4-4 4"/>
+            </svg>
+          </div>
+          <div class="brand-meta">
+            <span class="brand-title">Observatory</span>
+            <span class="brand-subtitle">GATE CS '27</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="sidebar-nav" id="main-nav-tabs">
+        <button class="nav-item-btn active" data-tab="today">
+          <span class="nav-item-icon">☀️</span>
+          <span class="nav-item-label">Today's Mission</span>
+          <span class="nav-item-badge" id="badge-mission-count">3</span>
+        </button>
+        <button class="nav-item-btn" data-tab="plan">
+          <span class="nav-item-icon">🗺️</span>
+          <span class="nav-item-label">Plan & Mastery</span>
+        </button>
+        <button class="nav-item-btn" data-tab="topic">
+          <span class="nav-item-icon">📚</span>
+          <span class="nav-item-label">Topic Practice</span>
+        </button>
+        <button class="nav-item-btn" data-tab="all">
+          <span class="nav-item-icon">🔍</span>
+          <span class="nav-item-label">All PYQs</span>
+          <span class="nav-item-badge" id="badge-total-pyqs">1.5k</span>
+        </button>
+        <button class="nav-item-btn" data-tab="mock">
+          <span class="nav-item-icon">⏱️</span>
+          <span class="nav-item-label">Mock Simulator</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar XP & Level Progression Widget -->
+      <div class="sidebar-xp-box">
+        <div class="xp-header-row">
+          <span class="xp-level-badge" id="sidebar-level-badge">Level 1</span>
+          <span class="xp-rank-title" id="sidebar-rank-title">Initiate</span>
+        </div>
+        <div class="xp-bar-track">
+          <div class="xp-bar-fill" id="sidebar-xp-fill" style="width: 25%;"></div>
+        </div>
+        <div class="xp-label-row">
+          <span id="sidebar-xp-current">25 XP</span>
+          <span id="sidebar-xp-next">100 XP</span>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer Utility Strip -->
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn" id="btn-toggle-theme" title="Toggle Night Observatory / Paper Theme">
+          <span id="theme-btn-icon">📜</span>
+          <span id="theme-btn-text">Paper</span>
+        </button>
+        <button class="focus-quick-btn" id="btn-quick-focus" title="Enter Distraction-Free Focus Mode">
+          <span>🎯</span> Focus
+        </button>
+      </div>
+    </aside>
+
+
+    <!-- ==================================================================== -->
+    <!-- MAIN WORKSPACE -->
+    <!-- ==================================================================== -->
+    <div class="app-workspace">
+
+      <!-- Focus Mode Top Control Bar (Visible only when in Focus Mode) -->
+      <div class="focus-mode-bar" id="focus-mode-bar">
+        <div class="pomodoro-display">
+          <span>⏳ Focus Mode</span>
+          <span class="pomodoro-timer-digits" id="pomodoro-timer-digits">25:00</span>
+          <button class="btn btn-secondary btn-xs" id="btn-pomodoro-toggle">Pause</button>
+          <button class="btn btn-secondary btn-xs" id="btn-pomodoro-reset">Reset</button>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-exit-focus">Exit Focus Mode ✕</button>
+      </div>
+
+      <!-- Workspace Top Navigation / Status Header -->
+      <header class="top-header">
+        <div class="header-breadcrumbs">
+          <span class="breadcrumb-root">GATE CS 2027</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-active" id="header-active-tab-title">Today's Mission</span>
+        </div>
+
+        <div class="header-stats-strip">
+          <div class="stat-chip streak-chip" id="chip-streak" title="Daily Streak & Activity">
+            <span>🔥</span>
+            <span class="chip-val" id="header-streak-val">1 Day</span>
+          </div>
+
+          <div class="stat-chip countdown-chip" id="chip-countdown" title="Click to customize Exam Date">
+            <span>⏳</span>
+            <span class="chip-val" id="header-countdown-val">78 Days</span>
+          </div>
+
+          <div class="stat-chip" id="chip-solved-counter" title="Total Solved Questions">
+            <span>✅</span>
+            <span class="chip-val" id="header-solved-val">0 / 1560</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Canvas Flow -->
+      <main class="main-content-flow">
+
+        <!-- ================================================================ -->
+        <!-- TAB 1: TODAY'S MISSION (Landing View) -->
+        <!-- ================================================================ -->
+        <section class="tab-view active" id="view-today">
+          <div class="view-title-block">
+            <div>
+              <h1 class="view-heading">Welcome to the Observatory</h1>
+              <p class="view-subheading">Here is your daily mission. Three high-impact checkpoints designed to keep you steady, focused, and on track.</p>
+            </div>
+          </div>
+
+          <div class="today-dashboard-grid">
+            <!-- Hero: Today's Mission Card -->
+            <div class="card mission-hero-card">
+              <div>
+                <div class="mission-header">
+                  <span class="mission-tag">🎯 Daily Mission</span>
+                  <div class="mission-progress-display">
+                    <div class="mission-ring-container">
+                      <svg class="mission-ring-svg" viewBox="0 0 60 60">
+                        <circle class="mission-ring-bg" cx="30" cy="30" r="25"/>
+                        <circle class="mission-ring-fg" id="mission-ring-fill" cx="30" cy="30" r="25"/>
+                      </svg>
+                      <span class="mission-ring-text" id="mission-ring-pct">0%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3 Dynamic Mission Goals -->
+                <div class="mission-goals-list" id="mission-goals-list">
+                  <!-- Goal 1: High Yield Topic -->
+                  <div class="mission-goal-item" id="mission-goal-1">
+                    <div class="goal-status-icon">✓</div>
+                    <div class="goal-details">
+                      <div class="goal-title" id="goal-1-title">Master: Data Structures</div>
+                      <div class="goal-subtitle" id="goal-1-sub">Solve at least 5 PYQs from your highest priority topic</div>
+                    </div>
+                    <button class="btn btn-secondary btn-xs goal-action-btn" id="btn-start-goal-1">Start</button>
+                  </div>
+
+                  <!-- Goal 2: Practice Daily Quota -->
+                  <div class="mission-goal-item" id="mission-goal-2">
+                    <div class="goal-status-icon">✓</div>
+                    <div class="goal-details">
+                      <div class="goal-title" id="goal-2-title">Solve 15 GATE PYQs</div>
+                      <div class="goal-subtitle" id="goal-2-sub">Progress: <span id="goal-2-prog">0</span> / 15 questions today</div>
+                    </div>
+                    <button class="btn btn-secondary btn-xs goal-action-btn" id="btn-start-goal-2">Practice</button>
+                  </div>
+
+                  <!-- Goal 3: Error Log / Spaced Review -->
+                  <div class="mission-goal-item" id="mission-goal-3">
+                    <div class="goal-status-icon">✓</div>
+                    <div class="goal-details">
+                      <div class="goal-title" id="goal-3-title">Spaced Review: 5 Mistakes</div>
+                      <div class="goal-subtitle" id="goal-3-sub">Review and correct questions due for reinforcement</div>
+                    </div>
+                    <button class="btn btn-secondary btn-xs goal-action-btn" id="btn-start-goal-3">Review</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reactive Motivation Text -->
+              <div class="motivation-banner">
+                <span class="motivation-icon">💡</span>
+                <span id="motivation-text">"Every challenging question you analyze today compounds into effortless recall on exam day."</span>
+              </div>
+            </div>
+
+            <!-- Right Column: Streak, Heatmap, and Review Queue -->
+            <div class="today-side-column">
+              <!-- Streak & Activity Card -->
+              <div class="card streak-card">
+                <div class="streak-hero-stat">
+                  <span class="streak-count-big" id="today-streak-count">1</span>
+                  <span class="streak-count-lbl">Day Streak</span>
+                  <span class="streak-rest-pill" id="today-rest-token-pill">🛡️ 1 Rest Token</span>
+                </div>
+
+                <!-- 7-Day Heat-Strip -->
+                <div class="week-heat-strip" id="today-week-strip">
+                  <!-- Dynamically rendered week days -->
+                </div>
+
+                <!-- GitHub-Style 60-Day Matrix -->
+                <div class="activity-heatmap-wrap">
+                  <div class="heatmap-label">
+                    <span>Recent Study Consistency</span>
+                    <span id="heatmap-total-active">Active days: 1</span>
+                  </div>
+                  <div class="heatmap-grid" id="activity-heatmap-grid">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Spaced Repetition Queue Card -->
+              <div class="card review-queue-card">
+                <div class="queue-header-row">
+                  <h3 class="card-title">Spaced Review Queue</h3>
+                  <span class="queue-badge" id="today-queue-count">0 Due</span>
+                </div>
+                <p class="queue-info-text" id="today-queue-text">Questions you answered wrong resurface after 1, 3, and 7 days to ensure permanent retention.</p>
+                <button class="btn btn-secondary btn-sm" id="btn-start-spaced-review">Start Review Session</button>
+              </div>
+
+              <!-- Best Next Step Card -->
+              <div class="card next-step-card" id="best-next-step-card">
+                <div class="next-step-meta">
+                  <span class="next-step-lbl">Recommended Next Step</span>
+                  <span class="next-step-title" id="next-step-topic-title">Data Structures</span>
+                  <span class="next-step-gain" id="next-step-gain-text">+3.2% exam weight • ~5.5 hrs</span>
+                </div>
+                <button class="btn btn-primary btn-xs" id="btn-go-next-step">Go →</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ================================================================ -->
+        <!-- TAB 2: PLAN & MASTERY MAP -->
+        <!-- ================================================================ -->
+        <section class="tab-view" id="view-plan">
+          <div class="view-title-block">
+            <div>
+              <h1 class="view-heading">Syllabus Optimizer & Mastery Map</h1>
+              <p class="view-subheading">Balance study time against GATE topic weightage. Track mastery levels across each subject constellation.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-reset-plan">Reset to 100%</button>
+          </div>
+
+          <!-- Hero Grid: Dual Donut Chart + Tactile Slider -->
+          <div class="plan-hero-grid">
+            <!-- Dual-Ring SVG Donut Chart Card -->
+            <div class="card dual-ring-card">
+              <div class="dual-donut-wrapper">
+                <svg class="dual-donut-svg" viewBox="0 0 220 220">
+                  <!-- Outer Track & Ring: Amber (Exam Importance) -->
+                  <circle class="donut-track" cx="110" cy="110" r="90" stroke-width="12"/>
+                  <circle class="donut-ring-outer" id="ring-importance" cx="110" cy="110" r="90" stroke-width="12" stroke-dasharray="565.48" stroke-dashoffset="113.1"/>
+                  <!-- Inner Track & Ring: Teal (Syllabus Coverage) -->
+                  <circle class="donut-track" cx="110" cy="110" r="68" stroke-width="10"/>
+                  <circle class="donut-ring-inner" id="ring-syllabus" cx="110" cy="110" r="68" stroke-width="10" stroke-dasharray="427.25" stroke-dashoffset="149.5"/>
+                </svg>
+
+                <div class="donut-center-metrics">
+                  <span class="donut-metric-val amber" id="donut-importance-val">80%</span>
+                  <span class="donut-metric-sub">Exam Weight</span>
+                  <div class="donut-divider"></div>
+                  <span class="donut-metric-val teal" id="donut-syllabus-val">65%</span>
+                  <span class="donut-metric-sub">Syllabus</span>
+                </div>
+              </div>
+
+              <div class="dual-ring-legend">
+                <span class="legend-chip"><span class="legend-dot-amber"></span> Exam Weight</span>
+                <span class="legend-chip"><span class="legend-dot-teal"></span> Syllabus Topics</span>
+              </div>
+            </div>
+
+            <!-- Tactile Slider & Controls -->
+            <div class="card plan-controls-card">
+              <div>
+                <div class="slider-group-head">
+                  <div>
+                    <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--accent-amber); letter-spacing: 0.05em;">Exam Goal Target</span>
+                    <h3 style="font-size: 1.25rem;">Target Exam Coverage: <span id="slider-goal-label" style="color: var(--accent-amber);">80%</span></h3>
+                  </div>
+
+                  <div class="preset-pill-group">
+                    <button class="btn-preset-pill" data-preset="60">60%</button>
+                    <button class="btn-preset-pill" data-preset="70">70%</button>
+                    <button class="btn-preset-pill active" data-preset="80">80%</button>
+                    <button class="btn-preset-pill" data-preset="90">90%</button>
+                    <button class="btn-preset-pill" data-preset="100">100%</button>
+                  </div>
+                </div>
+
+                <div class="tactile-slider-wrap">
+                  <input type="range" min="10" max="100" step="5" value="80" class="tactile-range-input" id="importance-slider">
+                  <div class="slider-tick-labels">
+                    <span>10%</span>
+                    <span>30%</span>
+                    <span>50%</span>
+                    <span>70%</span>
+                    <span>90%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stat Metrics Trio -->
+              <div class="plan-metrics-trio">
+                <div class="plan-stat-box">
+                  <span class="s-lbl">Topics In Plan</span>
+                  <span class="s-val" id="stat-topics-selected">22 / 31</span>
+                  <span class="s-sub" id="stat-topics-outside">9 topics outside goal</span>
+                </div>
+
+                <div class="plan-stat-box">
+                  <span class="s-lbl">Estimated Study</span>
+                  <span class="s-val" id="stat-hours-selected">420 hrs</span>
+                  <span class="s-sub" id="stat-pace-feedback">~14 hrs/week recommended</span>
+                </div>
+
+                <div class="plan-stat-box">
+                  <span class="s-lbl">Topics Finished</span>
+                  <span class="s-val" id="stat-topics-completed">0 / 31</span>
+                  <span class="s-sub" id="stat-completed-pct">0% completed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual Subject Mastery Constellation -->
+          <div class="mastery-map-section">
+            <div class="view-title-block" style="margin-bottom: var(--space-4);">
+              <div>
+                <h2>Subject Mastery Constellation</h2>
+                <p class="view-subheading">Levels reflect your real question solving accuracy and depth (Beginner, Solid, Strong, Exam-Ready).</p>
+              </div>
+            </div>
+
+            <div class="mastery-nodes-grid" id="mastery-nodes-grid">
+              <!-- Dynamically populated 11 subject cards -->
+            </div>
+          </div>
+
+          <!-- Grouped Syllabus & Subtopics Accordion -->
+          <div class="syllabus-section">
+            <div class="view-title-block" style="margin-bottom: var(--space-4);">
+              <div>
+                <h2>Detailed Syllabus & Subtopics Breakdown</h2>
+                <span class="view-subheading" id="selected-summary-text">Showing all 11 subjects</span>
+              </div>
+
+              <!-- Subtopic Filter Toolbar -->
+              <div class="subtopic-filter-toolbar">
+                <button class="btn-filter-pill active" id="filter-subtopics-all" data-sf="all">All Subtopics</button>
+                <button class="btn-filter-pill" id="filter-subtopics-important" data-sf="important">⭐ High Importance Only</button>
+                <button class="btn-filter-pill" id="filter-subtopics-pending" data-sf="pending">⏳ Pending Focus</button>
+                <button class="btn btn-secondary btn-xs" id="btn-toggle-all-subtopics">Expand All</button>
+              </div>
+            </div>
+
+            <div class="subject-accordion-list" id="subject-accordion-list">
+              <!-- Dynamically populated subjects & topics -->
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ================================================================ -->
+        <!-- TAB 3: TOPIC-WISE PYQs PRACTICE -->
+        <!-- ================================================================ -->
+        <section class="tab-view" id="view-topic">
+          <div class="view-title-block">
+            <div>
+              <h1 class="view-heading">Topic Practice Cockpit</h1>
+              <p class="view-subheading">Solve official past paper questions one by one. Instant gentle feedback with complete error logging.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-toggle-error-mode">
+              <span>⚠️</span> <span id="error-mode-text">Retry Wrong Answers (0)</span>
+            </button>
+          </div>
+
+          <!-- Selectors Strip -->
+          <div class="card selector-card" style="margin-bottom: var(--space-6);">
+            <div class="selector-row">
+              <div class="select-field">
+                <label for="topic-subject-select">Subject</label>
+                <select id="topic-subject-select" class="custom-select"></select>
+              </div>
+              <div class="select-field">
+                <label for="topic-topic-select">Topic</label>
+                <select id="topic-topic-select" class="custom-select"></select>
+              </div>
+              <div class="select-field">
+                <label for="topic-subtopic-select">Subtopic Filter</label>
+                <select id="topic-subtopic-select" class="custom-select">
+                  <option value="all">All Subtopics</option>
+                </select>
+              </div>
+              <div class="topic-stats-box">
+                <div class="tstat"><span class="tstat-val" id="tstat-total">0</span><span class="tstat-lbl">Questions</span></div>
+                <div class="tstat"><span class="tstat-val" style="color: var(--status-correct);" id="tstat-correct">0</span><span class="tstat-lbl">Correct</span></div>
+                <div class="tstat"><span class="tstat-val" style="color: var(--status-wrong);" id="tstat-wrong">0</span><span class="tstat-lbl">Wrong</span></div>
+                <div class="tstat"><span class="tstat-val" id="tstat-accuracy">0%</span><span class="tstat-lbl">Accuracy</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Practice Question Area -->
+          <div class="practice-container" id="topic-practice-container">
+            <!-- Dynamically populated question card -->
+          </div>
+        </section>
+
+
+        <!-- ================================================================ -->
+        <!-- TAB 4: ALL PYQs ARCHIVE -->
+        <!-- ================================================================ -->
+        <section class="tab-view" id="view-all">
+          <div class="view-title-block">
+            <div>
+              <h1 class="view-heading">All Official GATE PYQs Archive</h1>
+              <p class="view-subheading">Search and filter across all 1,560 official questions spanning 2011 to 2025.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-toggle-all-answers">Show All Answers</button>
+          </div>
+
+          <!-- Filter Controls Card -->
+          <div class="card filter-card">
+            <div class="search-bar-row">
+              <div class="search-box">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="all-search-input" placeholder="Search keywords (e.g. 'deadlock', 'b-tree', 'dijkstra', 'subnet', '2025')...">
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-clear-filters">Clear</button>
+            </div>
+
+            <div class="filter-pills-row">
+              <div class="filter-item">
+                <label>Year</label>
+                <select id="filter-year" class="custom-select-sm">
+                  <option value="all">All Years (2011–2025)</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>Subject</label>
+                <select id="filter-subject" class="custom-select-sm">
+                  <option value="all">All Subjects</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>Type</label>
+                <select id="filter-type" class="custom-select-sm">
+                  <option value="all">All Types</option>
+                  <option value="MCQ">MCQ (Multiple Choice)</option>
+                  <option value="MSQ">MSQ (Multiple Select)</option>
+                  <option value="NAT">NAT (Numerical)</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>Marks</label>
+                <select id="filter-marks" class="custom-select-sm">
+                  <option value="all">All Marks</option>
+                  <option value="1">1 Mark</option>
+                  <option value="2">2 Marks</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <input type="checkbox" id="filter-bookmarked-only" style="accent-color: var(--accent-amber);">
+                  Bookmarked Only ⭐
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Header & List -->
+          <div class="all-results-header">
+            <span id="all-results-count">Showing 1,560 questions</span>
+            <div class="pagination-controls" id="all-pagination-top"></div>
+          </div>
+
+          <div class="questions-list-view" id="all-questions-list"></div>
+
+          <div class="all-results-header" style="margin-top: var(--space-4);">
+            <div></div>
+            <div class="pagination-controls" id="all-pagination-bottom"></div>
+          </div>
+        </section>
+
+
+        <!-- ================================================================ -->
+        <!-- TAB 5: MOCK TEST SIMULATOR -->
+        <!-- ================================================================ -->
+        <section class="tab-view" id="view-mock">
+          <!-- State A: Mock Lobby -->
+          <div id="mock-lobby" class="mock-lobby-view">
+            <div class="view-title-block">
+              <div>
+                <h1 class="view-heading">GATE Exam Simulator</h1>
+                <p class="view-subheading">Strict GATE rules: -1/3 for 1-mark MCQ, -2/3 for 2-mark MCQ, MSQ no penalty, NAT range matching.</p>
+              </div>
+            </div>
+
+            <div class="mock-cards-grid">
+              <!-- Full Mock -->
+              <div class="card mock-option-card recommended">
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--accent-amber); letter-spacing: 0.05em;">Official Format</span>
+                  <h3 style="font-size: 1.25rem; margin-top: 4px;">Full GATE CS Mock</h3>
+                  <div class="mock-specs" style="margin-top: var(--space-4);">
+                    <div class="spec-row"><span>Questions:</span> <strong>65 Total</strong></div>
+                    <div class="spec-row"><span>Total Marks:</span> <strong>100 Marks</strong></div>
+                    <div class="spec-row"><span>Duration:</span> <strong>180 Minutes (3 hrs)</strong></div>
+                    <div class="spec-row"><span>Sections:</span> <strong>General Aptitude (15m) + CS (85m)</strong></div>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-block btn-start-mock" data-mode="full">Start Full Mock</button>
+              </div>
+
+              <!-- Subject Mock -->
+              <div class="card mock-option-card">
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--accent-teal); letter-spacing: 0.05em;">Targeted Drill</span>
+                  <h3 style="font-size: 1.25rem; margin-top: 4px;">Subject Mini Mock</h3>
+                  <div class="mock-specs" style="margin-top: var(--space-4);">
+                    <div class="spec-row"><span>Questions:</span> <strong>20 Questions</strong></div>
+                    <div class="spec-row"><span>Marks:</span> <strong>30–35 Marks</strong></div>
+                    <div class="spec-row"><span>Duration:</span> <strong>45 Minutes</strong></div>
+                  </div>
+                  <div class="select-field" style="margin-top: var(--space-3);">
+                    <label for="mock-subject-picker">Select Subject</label>
+                    <select id="mock-subject-picker" class="custom-select"></select>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-block btn-start-mock" data-mode="subject">Start Subject Mock</button>
+              </div>
+
+              <!-- Plan-Only Mock -->
+              <div class="card mock-option-card">
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Curated Pool</span>
+                  <h3 style="font-size: 1.25rem; margin-top: 4px;">Plan Topics Mock</h3>
+                  <div class="mock-specs" style="margin-top: var(--space-4);">
+                    <div class="spec-row"><span>Questions:</span> <strong>30 Questions</strong></div>
+                    <div class="spec-row"><span>Pool:</span> <strong>Active Study Plan Topics</strong></div>
+                    <div class="spec-row"><span>Duration:</span> <strong>60 Minutes</strong></div>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-block btn-start-mock" data-mode="plan">Start Plan Mock</button>
+              </div>
+            </div>
+
+            <!-- Mock History -->
+            <div class="card" id="mock-history-container">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                <h3>Past Mock Attempts</h3>
+                <button class="btn btn-secondary btn-xs" id="btn-clear-history">Clear History</button>
+              </div>
+              <div id="mock-history-list">
+                <p style="font-size: 0.88rem; color: var(--text-muted);">No mock tests taken yet. Start your first simulator above!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- State B: Active Test Screen (Exam Simulator) -->
+          <div id="mock-active" class="mock-active-screen hidden">
+            <div class="mock-test-header">
+              <div class="mock-test-meta">
+                <span style="font-family: var(--font-serif); font-weight: 700; font-size: 1.15rem;" id="mock-active-title">Full Mock Test</span>
+                <div style="display: flex; gap: 4px;" id="mock-section-tabs">
+                  <button class="btn btn-secondary btn-xs sec-btn active" data-sec="GA">General Aptitude (GA)</button>
+                  <button class="btn btn-secondary btn-xs sec-btn" data-sec="CS">Computer Science (CS)</button>
+                </div>
+              </div>
+
+              <div class="mock-timer-display">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Remaining:</span>
+                <span class="timer-digits" id="mock-countdown-timer">03:00:00</span>
+              </div>
+
+              <button class="btn btn-secondary btn-sm" style="border-color: var(--status-wrong); color: var(--status-wrong);" id="btn-submit-mock-prompt">Submit Exam</button>
+            </div>
+
+            <div class="mock-test-body">
+              <div class="mock-question-pane">
+                <div>
+                  <div class="q-header-meta" style="margin-bottom: var(--space-4);">
+                    <div class="q-badge-group">
+                      <span class="q-badge" id="mock-current-qnum">Question 1</span>
+                      <span class="q-badge" id="mock-current-type">MCQ</span>
+                      <span class="q-badge marks" id="mock-current-marks">1 Mark</span>
+                      <span class="q-badge" id="mock-current-sub">General Aptitude</span>
+                    </div>
+                  </div>
+
+                  <div id="mock-question-content"></div>
+                </div>
+
+                <div class="q-footer-actions" style="margin-top: var(--space-6);">
+                  <div style="display: flex; gap: var(--space-2);">
+                    <button class="btn btn-secondary btn-sm" id="btn-mock-mark-review">Mark for Review & Next</button>
+                    <button class="btn btn-secondary btn-sm" id="btn-mock-clear">Clear Response</button>
+                  </div>
+                  <div style="display: flex; gap: var(--space-2);">
+                    <button class="btn btn-secondary btn-sm" id="btn-mock-prev">Previous</button>
+                    <button class="btn btn-primary btn-sm" id="btn-mock-save-next">Save & Next</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Question Palette Sidebar -->
+              <div class="mock-nav-sidebar">
+                <h4 style="font-size: 0.9rem;">Question Palette</h4>
+                <div class="palette-grid" id="mock-palette-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- State C: Mock Results & Analytics Screen -->
+          <div id="mock-results" class="mock-results-screen hidden">
+            <div class="result-hero-card">
+              <div>
+                <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--accent-amber);">Simulator Report</span>
+                <h2 id="res-test-title" style="margin-top: 4px;">GATE CS Full Mock Test</h2>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-top: var(--space-3);">
+                  <span class="big-score" id="res-total-score">68.33</span>
+                  <span style="color: var(--text-muted); font-size: 1.1rem;">/ 100 Marks</span>
+                </div>
+
+                <div class="score-stat-group">
+                  <div class="sstat"><strong id="res-accuracy">78.5%</strong><span>Accuracy</span></div>
+                  <div class="sstat"><strong id="res-attempted">52 / 65</strong><span>Attempted</span></div>
+                  <div class="sstat"><strong id="res-time-spent">2h 45m</strong><span>Time Taken</span></div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                <button class="btn btn-primary btn-sm" id="btn-retake-mock">Take Another Mock</button>
+                <button class="btn btn-secondary btn-sm" id="btn-back-to-lobby">Back to Lobby</button>
+              </div>
+            </div>
+
+            <!-- Breakdown Table -->
+            <div class="card" style="margin-bottom: var(--space-6);">
+              <h3 style="margin-bottom: var(--space-4);">Sectional Performance</h3>
+              <div style="overflow-x: auto;">
+                <table class="dashboard-table" id="res-breakdown-table">
+                  <thead>
+                    <tr>
+                      <th>Section</th>
+                      <th>Total</th>
+                      <th>Attempted</th>
+                      <th>Correct</th>
+                      <th>Wrong</th>
+                      <th>Penalty</th>
+                      <th>Score</th>
+                    </tr>
+                  </thead>
+                  <tbody id="res-breakdown-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Weak Topics -->
+            <div class="card" style="margin-bottom: var(--space-6);">
+              <h3 style="margin-bottom: var(--space-4);">Topic Diagnosis & Next Steps</h3>
+              <div id="res-topic-performance-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3);"></div>
+            </div>
+
+            <!-- Full Review -->
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                <h3>Complete Question Review</h3>
+                <div class="preset-pill-group">
+                  <button class="btn-preset-pill active" data-rf="all">All</button>
+                  <button class="btn-preset-pill" data-rf="wrong">Wrong Only ❌</button>
+                  <button class="btn-preset-pill" data-rf="unattempted">Unattempted ⚪</button>
+                </div>
+              </div>
+              <div id="res-review-questions-list"></div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+  </div>
+
+  <!-- Mobile Bottom Sticky Navigation Bar -->
+  <nav class="mobile-bottom-nav" id="mobile-nav-tabs">
+    <button class="mobile-nav-btn active" data-tab="today">
+      <span>☀️</span> Today
+    </button>
+    <button class="mobile-nav-btn" data-tab="plan">
+      <span>🗺️</span> Plan
+    </button>
+    <button class="mobile-nav-btn" data-tab="topic">
+      <span>📚</span> Practice
+    </button>
+    <button class="mobile-nav-btn" data-tab="all">
+      <span>🔍</span> Archive
+    </button>
+    <button class="mobile-nav-btn" data-tab="mock">
+      <span>⏱️</span> Mock
+    </button>
+  </nav>
+
+  <!-- Submit Confirmation Modal -->
+  <div class="modal-overlay hidden" id="modal-submit-confirm">
+    <div class="modal-card">
+      <h3 style="margin-bottom: var(--space-2);">Submit Examination</h3>
+      <p style="color: var(--text-secondary); margin-bottom: var(--space-5);">Are you ready to submit? You cannot change answers after submitting.</p>
+      <div style="display: flex; gap: var(--space-4); margin-bottom: var(--space-6); background: var(--bg-surface); padding: 12px; border-radius: var(--radius-md);">
+        <div><strong id="modal-ans-count" style="color: var(--status-correct);">0</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">Answered</span></div>
+        <div><strong id="modal-unans-count" style="color: var(--status-wrong);">0</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">Unanswered</span></div>
+        <div><strong id="modal-marked-count" style="color: var(--accent-teal);">0</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">Marked</span></div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: var(--space-3);">
+        <button class="btn btn-secondary" id="btn-cancel-submit">Return</button>
+        <button class="btn btn-primary" id="btn-confirm-submit">Confirm Submission</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exam Date Customizer Modal -->
+  <div class="modal-overlay hidden" id="modal-exam-date">
+    <div class="modal-card">
+      <h3 style="margin-bottom: var(--space-2);">Set Your Target GATE Date</h3>
+      <p style="color: var(--text-secondary); margin-bottom: var(--space-4);">We'll calculate your exact countdown and weekly study pace.</p>
+      <div style="margin-bottom: var(--space-6);">
+        <input type="date" id="input-exam-date" class="custom-select" style="width: 100%;">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: var(--space-3);">
+        <button class="btn btn-secondary" id="btn-cancel-exam-date">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-exam-date">Save Date</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Offline Dataset Script -->
+  <script src="data/dataset.js"></script>
+  <!-- Application Main Controller Script -->
+  <script src="app.js"></script>
+</body>
+</html>

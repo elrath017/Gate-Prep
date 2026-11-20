@@ -1,0 +1,312 @@
+[
+  {
+    "id": "data_structures",
+    "name": "Data Structures",
+    "subject": "Programming and Data Structures",
+    "subject_id": "PDS",
+    "priority_score": 149.6,
+    "estimated_hours": 66,
+    "question_count": 371,
+    "marks_count": 622
+  },
+  {
+    "id": "quantitative_analytical_spatial",
+    "name": "Quantitative and Analytical Aptitude",
+    "subject": "General Aptitude",
+    "subject_id": "GA",
+    "priority_score": 100.3,
+    "estimated_hours": 34,
+    "question_count": 177,
+    "marks_count": 272
+  },
+  {
+    "id": "boolean_algebra_circuits",
+    "name": "Boolean Algebra and Circuits",
+    "subject": "Digital Logic",
+    "subject_id": "DL",
+    "priority_score": 88.8,
+    "estimated_hours": 27,
+    "question_count": 115,
+    "marks_count": 190
+  },
+  {
+    "id": "processes_threads_concurrency",
+    "name": "Processes, Threads and Concurrency",
+    "subject": "Operating System",
+    "subject_id": "OS",
+    "priority_score": 80.3,
+    "estimated_hours": 22,
+    "question_count": 83,
+    "marks_count": 130
+  },
+  {
+    "id": "machine_instructions_addressing",
+    "name": "Machine Instructions and Addressing",
+    "subject": "Computer Organization and Architecture",
+    "subject_id": "COA",
+    "priority_score": 79.2,
+    "estimated_hours": 19,
+    "question_count": 77,
+    "marks_count": 122
+  },
+  {
+    "id": "er_relational_model",
+    "name": "ER and Relational Model",
+    "subject": "Databases",
+    "subject_id": "DB",
+    "priority_score": 75.0,
+    "estimated_hours": 16,
+    "question_count": 58,
+    "marks_count": 92
+  },
+  {
+    "id": "discrete_mathematics",
+    "name": "Discrete Mathematics",
+    "subject": "Engineering Mathematics",
+    "subject_id": "EM",
+    "priority_score": 74.3,
+    "estimated_hours": 21,
+    "question_count": 56,
+    "marks_count": 87
+  },
+  {
+    "id": "verbal_ability",
+    "name": "Verbal Ability",
+    "subject": "General Aptitude",
+    "subject_id": "GA",
+    "priority_score": 72.3,
+    "estimated_hours": 15,
+    "question_count": 53,
+    "marks_count": 73
+  },
+  {
+    "id": "network_layer",
+    "name": "Network Layer and Routing",
+    "subject": "Computer Networks",
+    "subject_id": "CN",
+    "priority_score": 71.9,
+    "estimated_hours": 17,
+    "question_count": 44,
+    "marks_count": 70
+  },
+  {
+    "id": "memory_management_files",
+    "name": "Memory Management and File Systems",
+    "subject": "Operating System",
+    "subject_id": "OS",
+    "priority_score": 70.6,
+    "estimated_hours": 13,
+    "question_count": 39,
+    "marks_count": 67
+  },
+  {
+    "id": "regular_languages_automata",
+    "name": "Regular Languages and Finite Automata",
+    "subject": "Theory of Computation",
+    "subject_id": "TOC",
+    "priority_score": 70.5,
+    "estimated_hours": 14,
+    "question_count": 40,
+    "marks_count": 60
+  },
+  {
+    "id": "transport_application_layers",
+    "name": "Transport and Application Layers",
+    "subject": "Computer Networks",
+    "subject_id": "CN",
+    "priority_score": 70.0,
+    "estimated_hours": 14,
+    "question_count": 41,
+    "marks_count": 57
+  },
+  {
+    "id": "context_free_languages",
+    "name": "Context-Free Languages and Pushdown Automata",
+    "subject": "Theory of Computation",
+    "subject_id": "TOC",
+    "priority_score": 69.3,
+    "estimated_hours": 13,
+    "question_count": 38,
+    "marks_count": 64
+  },
+  {
+    "id": "programming_in_c",
+    "name": "Programming in C",
+    "subject": "Programming and Data Structures",
+    "subject_id": "PDS",
+    "priority_score": 68.7,
+    "estimated_hours": 13,
+    "question_count": 38,
+    "marks_count": 60
+  },
+  {
+    "id": "transactions_concurrency",
+    "name": "Transactions and Concurrency Control",
+    "subject": "Databases",
+    "subject_id": "DB",
+    "priority_score": 65.1,
+    "estimated_hours": 13,
+    "question_count": 35,
+    "marks_count": 53
+  },
+  {
+    "id": "asymptotic_complexity",
+    "name": "Asymptotic Analysis",
+    "subject": "Algorithms",
+    "subject_id": "ALGO",
+    "priority_score": 64.8,
+    "estimated_hours": 13,
+    "question_count": 35,
+    "marks_count": 51
+  },
+  {
+    "id": "memory_hierarchy",
+    "name": "Memory Hierarchy and I/O",
+    "subject": "Computer Organization and Architecture",
+    "subject_id": "COA",
+    "priority_score": 54.5,
+    "estimated_hours": 12,
+    "question_count": 28,
+    "marks_count": 46
+  },
+  {
+    "id": "lexical_and_parsing",
+    "name": "Lexical Analysis and Parsing",
+    "subject": "Compiler Design",
+    "subject_id": "CD",
+    "priority_score": 54.5,
+    "estimated_hours": 12,
+    "question_count": 28,
+    "marks_count": 45
+  },
+  {
+    "id": "probability_and_statistics",
+    "name": "Probability and Statistics",
+    "subject": "Engineering Mathematics",
+    "subject_id": "EM",
+    "priority_score": 50.8,
+    "estimated_hours": 14,
+    "question_count": 26,
+    "marks_count": 39
+  },
+  {
+    "id": "linear_algebra",
+    "name": "Linear Algebra",
+    "subject": "Engineering Mathematics",
+    "subject_id": "EM",
+    "priority_score": 50.6,
+    "estimated_hours": 14,
+    "question_count": 25,
+    "marks_count": 42
+  },
+  {
+    "id": "database_design_indexing",
+    "name": "Database Design and Indexing",
+    "subject": "Databases",
+    "subject_id": "DB",
+    "priority_score": 50.3,
+    "estimated_hours": 11,
+    "question_count": 26,
+    "marks_count": 40
+  },
+  {
+    "id": "turing_machines_undecidability",
+    "name": "Turing Machines and Undecidability",
+    "subject": "Theory of Computation",
+    "subject_id": "TOC",
+    "priority_score": 49.7,
+    "estimated_hours": 11,
+    "question_count": 26,
+    "marks_count": 41
+  },
+  {
+    "id": "graph_algorithms",
+    "name": "Graph Algorithms",
+    "subject": "Algorithms",
+    "subject_id": "ALGO",
+    "priority_score": 46.0,
+    "estimated_hours": 11,
+    "question_count": 24,
+    "marks_count": 39
+  },
+  {
+    "id": "pipelining",
+    "name": "Pipelining and Hazards",
+    "subject": "Computer Organization and Architecture",
+    "subject_id": "COA",
+    "priority_score": 36.9,
+    "estimated_hours": 10,
+    "question_count": 18,
+    "marks_count": 32
+  },
+  {
+    "id": "design_techniques",
+    "name": "Algorithm Design Techniques",
+    "subject": "Algorithms",
+    "subject_id": "ALGO",
+    "priority_score": 31.5,
+    "estimated_hours": 10,
+    "question_count": 15,
+    "marks_count": 23
+  },
+  {
+    "id": "number_representations",
+    "name": "Number Representations",
+    "subject": "Digital Logic",
+    "subject_id": "DL",
+    "priority_score": 24.4,
+    "estimated_hours": 9,
+    "question_count": 10,
+    "marks_count": 14
+  },
+  {
+    "id": "layering_physical_datalink",
+    "name": "Layering and Data Link Layer",
+    "subject": "Computer Networks",
+    "subject_id": "CN",
+    "priority_score": 22.5,
+    "estimated_hours": 9,
+    "question_count": 9,
+    "marks_count": 15
+  },
+  {
+    "id": "cpu_scheduling",
+    "name": "CPU and I/O Scheduling",
+    "subject": "Operating System",
+    "subject_id": "OS",
+    "priority_score": 22.4,
+    "estimated_hours": 9,
+    "question_count": 9,
+    "marks_count": 14
+  },
+  {
+    "id": "code_optimization",
+    "name": "Code Optimization and Data Flow Analysis",
+    "subject": "Compiler Design",
+    "subject_id": "CD",
+    "priority_score": 17.8,
+    "estimated_hours": 8,
+    "question_count": 6,
+    "marks_count": 11
+  },
+  {
+    "id": "calculus",
+    "name": "Calculus",
+    "subject": "Engineering Mathematics",
+    "subject_id": "EM",
+    "priority_score": 15.0,
+    "estimated_hours": 11,
+    "question_count": 5,
+    "marks_count": 7
+  },
+  {
+    "id": "codegen_and_runtime",
+    "name": "Code Generation and Runtime",
+    "subject": "Compiler Design",
+    "subject_id": "CD",
+    "priority_score": 15.0,
+    "estimated_hours": 8,
+    "question_count": 5,
+    "marks_count": 6
+  }
+]

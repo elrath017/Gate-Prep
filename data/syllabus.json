@@ -1,0 +1,342 @@
+{
+  "subjects": [
+    {
+      "id": "EM",
+      "name": "Engineering Mathematics",
+      "topics": [
+        {
+          "id": "discrete_mathematics",
+          "name": "Discrete Mathematics",
+          "subtopics": [
+            "Propositional and first order logic",
+            "Sets, relations, functions, partial orders and lattices",
+            "Monoids, Groups",
+            "Graphs: connectivity, matching, colouring",
+            "Combinatorics: counting, recurrence relations, generating functions"
+          ]
+        },
+        {
+          "id": "linear_algebra",
+          "name": "Linear Algebra",
+          "subtopics": [
+            "Matrices and determinants",
+            "System of linear equations",
+            "Eigenvalues and eigenvectors",
+            "LU decomposition"
+          ]
+        },
+        {
+          "id": "calculus",
+          "name": "Calculus",
+          "subtopics": [
+            "Limits, continuity and differentiability",
+            "Maxima and minima",
+            "Mean value theorem",
+            "Integration"
+          ]
+        },
+        {
+          "id": "probability_and_statistics",
+          "name": "Probability and Statistics",
+          "subtopics": [
+            "Random variables",
+            "Uniform, normal, exponential, Poisson and binomial distributions",
+            "Mean, median, mode and standard deviation",
+            "Conditional probability and Bayes theorem"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DL",
+      "name": "Digital Logic",
+      "topics": [
+        {
+          "id": "boolean_algebra_circuits",
+          "name": "Boolean Algebra and Circuits",
+          "subtopics": [
+            "Boolean algebra",
+            "Combinational circuits",
+            "Sequential circuits",
+            "Minimization"
+          ]
+        },
+        {
+          "id": "number_representations",
+          "name": "Number Representations",
+          "subtopics": [
+            "Number representations and computer arithmetic (fixed and floating point)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "COA",
+      "name": "Computer Organization and Architecture",
+      "topics": [
+        {
+          "id": "machine_instructions_addressing",
+          "name": "Machine Instructions and Addressing",
+          "subtopics": [
+            "Machine instructions and addressing modes",
+            "ALU, data-path and control unit"
+          ]
+        },
+        {
+          "id": "pipelining",
+          "name": "Pipelining and Hazards",
+          "subtopics": [
+            "Instruction pipelining",
+            "Pipeline hazards"
+          ]
+        },
+        {
+          "id": "memory_hierarchy",
+          "name": "Memory Hierarchy and I/O",
+          "subtopics": [
+            "Cache memory",
+            "Main memory and secondary storage",
+            "I/O interface (interrupt and DMA mode)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PDS",
+      "name": "Programming and Data Structures",
+      "topics": [
+        {
+          "id": "programming_in_c",
+          "name": "Programming in C",
+          "subtopics": [
+            "Programming in C",
+            "Recursion"
+          ]
+        },
+        {
+          "id": "data_structures",
+          "name": "Data Structures",
+          "subtopics": [
+            "Arrays, stacks, queues, linked lists",
+            "Trees, binary search trees",
+            "Binary heaps",
+            "Graphs"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ALGO",
+      "name": "Algorithms",
+      "topics": [
+        {
+          "id": "asymptotic_complexity",
+          "name": "Asymptotic Analysis",
+          "subtopics": [
+            "Asymptotic worst case time and space complexity",
+            "Searching, sorting, hashing"
+          ]
+        },
+        {
+          "id": "design_techniques",
+          "name": "Algorithm Design Techniques",
+          "subtopics": [
+            "Greedy algorithms",
+            "Dynamic programming",
+            "Divide-and-conquer"
+          ]
+        },
+        {
+          "id": "graph_algorithms",
+          "name": "Graph Algorithms",
+          "subtopics": [
+            "Graph traversals",
+            "Minimum spanning trees",
+            "Shortest paths"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TOC",
+      "name": "Theory of Computation",
+      "topics": [
+        {
+          "id": "regular_languages_automata",
+          "name": "Regular Languages and Finite Automata",
+          "subtopics": [
+            "Regular expressions and finite automata",
+            "Pumping lemma for regular languages"
+          ]
+        },
+        {
+          "id": "context_free_languages",
+          "name": "Context-Free Languages and Pushdown Automata",
+          "subtopics": [
+            "Context-free grammars and push-down automata",
+            "Regular and context-free languages"
+          ]
+        },
+        {
+          "id": "turing_machines_undecidability",
+          "name": "Turing Machines and Undecidability",
+          "subtopics": [
+            "Turing machines",
+            "Undecidability"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CD",
+      "name": "Compiler Design",
+      "topics": [
+        {
+          "id": "lexical_and_parsing",
+          "name": "Lexical Analysis and Parsing",
+          "subtopics": [
+            "Lexical analysis",
+            "Parsing",
+            "Syntax-directed translation"
+          ]
+        },
+        {
+          "id": "codegen_and_runtime",
+          "name": "Code Generation and Runtime",
+          "subtopics": [
+            "Runtime environments",
+            "Intermediate code generation"
+          ]
+        },
+        {
+          "id": "code_optimization",
+          "name": "Code Optimization and Data Flow Analysis",
+          "subtopics": [
+            "Local optimisation",
+            "Data flow analyses: constant propagation, liveness analysis, common sub expression elimination"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "OS",
+      "name": "Operating System",
+      "topics": [
+        {
+          "id": "processes_threads_concurrency",
+          "name": "Processes, Threads and Concurrency",
+          "subtopics": [
+            "System calls, processes, threads",
+            "Inter-process communication",
+            "Concurrency and synchronization",
+            "Deadlock"
+          ]
+        },
+        {
+          "id": "cpu_scheduling",
+          "name": "CPU and I/O Scheduling",
+          "subtopics": [
+            "CPU scheduling",
+            "I/O scheduling"
+          ]
+        },
+        {
+          "id": "memory_management_files",
+          "name": "Memory Management and File Systems",
+          "subtopics": [
+            "Memory management and virtual memory",
+            "File systems"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DB",
+      "name": "Databases",
+      "topics": [
+        {
+          "id": "er_relational_model",
+          "name": "ER and Relational Model",
+          "subtopics": [
+            "ER-model",
+            "Relational model: relational algebra, tuple calculus, SQL",
+            "Integrity constraints"
+          ]
+        },
+        {
+          "id": "database_design_indexing",
+          "name": "Database Design and Indexing",
+          "subtopics": [
+            "Normal forms",
+            "File organization, indexing (e.g., B and B+ trees)"
+          ]
+        },
+        {
+          "id": "transactions_concurrency",
+          "name": "Transactions and Concurrency Control",
+          "subtopics": [
+            "Transactions",
+            "Concurrency control"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CN",
+      "name": "Computer Networks",
+      "topics": [
+        {
+          "id": "layering_physical_datalink",
+          "name": "Layering and Data Link Layer",
+          "subtopics": [
+            "Concept of layering: OSI and TCP/IP Protocol Stacks",
+            "Basics of packet, circuit and virtual circuit-switching",
+            "Data link layer: framing, error detection, Medium Access Control, Ethernet bridging"
+          ]
+        },
+        {
+          "id": "network_layer",
+          "name": "Network Layer and Routing",
+          "subtopics": [
+            "Routing protocols: shortest path, flooding, distance vector and link state routing",
+            "Fragmentation and IP addressing, IPv4, CIDR notation",
+            "Basics of IP support protocols (ARP, DHCP, ICMP)",
+            "Network Address Translation (NAT)"
+          ]
+        },
+        {
+          "id": "transport_application_layers",
+          "name": "Transport and Application Layers",
+          "subtopics": [
+            "Transport layer: flow control and congestion control, UDP, TCP, sockets",
+            "Application layer protocols: DNS, SMTP, HTTP, FTP, Email"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "GA",
+      "name": "General Aptitude",
+      "topics": [
+        {
+          "id": "verbal_ability",
+          "name": "Verbal Ability",
+          "subtopics": [
+            "English grammar",
+            "Sentence completion and vocabulary",
+            "Critical reasoning and verbal deduction"
+          ]
+        },
+        {
+          "id": "quantitative_analytical_spatial",
+          "name": "Quantitative and Analytical Aptitude",
+          "subtopics": [
+            "Numerical computation and estimation",
+            "Numerical reasoning and data interpretation",
+            "Analytical and spatial reasoning"
+          ]
+        }
+      ]
+    }
+  ]
+}
