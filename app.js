@@ -206,12 +206,26 @@
         btnText.textContent = 'Paper';
       }
     }
+
+    const mobileThemeBtn = document.getElementById('mobile-btn-toggle-theme');
+    if (mobileThemeBtn) {
+      mobileThemeBtn.textContent = theme === 'paper' ? '🌙' : '📜';
+      mobileThemeBtn.title = theme === 'paper' ? 'Switch to Night Theme' : 'Switch to Paper Theme';
+    }
   }
 
   function initThemeToggle() {
     const btn = document.getElementById('btn-toggle-theme');
     if (btn) {
       btn.addEventListener('click', () => {
+        const nextTheme = state.theme === 'night' ? 'paper' : 'night';
+        applyTheme(nextTheme);
+      });
+    }
+
+    const mobileBtn = document.getElementById('mobile-btn-toggle-theme');
+    if (mobileBtn) {
+      mobileBtn.addEventListener('click', () => {
         const nextTheme = state.theme === 'night' ? 'paper' : 'night';
         applyTheme(nextTheme);
       });
@@ -2666,12 +2680,16 @@
   // =========================================================================
   function initFocusModeAndPomodoro() {
     const quickBtn = document.getElementById('btn-quick-focus');
+    const mobileQuickBtn = document.getElementById('mobile-btn-quick-focus');
     const exitBtn = document.getElementById('btn-exit-focus');
     const togglePomoBtn = document.getElementById('btn-pomodoro-toggle');
     const resetPomoBtn = document.getElementById('btn-pomodoro-reset');
 
     if (quickBtn) {
       quickBtn.addEventListener('click', () => enterFocusMode());
+    }
+    if (mobileQuickBtn) {
+      mobileQuickBtn.addEventListener('click', () => enterFocusMode());
     }
     if (exitBtn) {
       exitBtn.addEventListener('click', () => exitFocusMode());
