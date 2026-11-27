@@ -1847,6 +1847,24 @@ button, input, select, textarea {
   white-space: pre-line;
 }
 
+.q-statement u,
+.q-summary-body u,
+.q-statement ins,
+.q-summary-body ins {
+  text-decoration: underline 2.5px var(--accent-amber);
+  text-underline-offset: 4px;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+[data-theme="paper"] .q-statement u,
+[data-theme="paper"] .q-summary-body u,
+[data-theme="paper"] .q-statement ins,
+[data-theme="paper"] .q-summary-body ins {
+  text-decoration: underline 2.5px #d97706;
+  color: #b45309;
+}
+
 .q-diagram-container {
   background: #FFFFFF;
   padding: 8px 12px;

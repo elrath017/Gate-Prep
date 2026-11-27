@@ -1493,7 +1493,8 @@
         const needle = state.topicMode.subtopic.toLowerCase();
         const subKeywords = needle.split(/[,:;]|\band\b/).map(k => k.trim()).filter(k => k.length > 2);
         const matched = filtered.filter(q => {
-          const hay = ((q.question || '') + ' ' + (q.options || []).join(' ') + ' ' + (q.explanation || '')).toLowerCase();
+          const cleanQ = (q.question || '').replace(/<[^>]+>/g, '');
+          const hay = (cleanQ + ' ' + (q.options || []).join(' ') + ' ' + (q.explanation || '')).toLowerCase();
           if (hay.includes(needle)) return true;
           return subKeywords.some(kw => hay.includes(kw));
         });
@@ -1948,7 +1949,8 @@
       if (state.allPyqs.marks !== 'all' && q.marks !== parseInt(state.allPyqs.marks, 10)) return false;
       if (state.allPyqs.bookmarkedOnly && !state.bookmarkedQids.has(q.id)) return false;
       if (state.allPyqs.search) {
-        const text = (q.question + ' ' + (q.options || []).join(' ') + ' ' + q.id).toLowerCase();
+        const cleanQ = (q.question || '').replace(/<[^>]+>/g, '');
+        const text = (cleanQ + ' ' + (q.options || []).join(' ') + ' ' + q.id).toLowerCase();
         if (!text.includes(state.allPyqs.search)) return false;
       }
       return true;

@@ -4593,7 +4593,7 @@
     "subject": "General Aptitude",
     "topic": "verbal_ability",
     "difficulty": "Easy",
-    "question": "Which of the following options is the closest in meaning to the phrase underlined in the sentence \nbelow? \n \nIt is fascinating to see life forms cope with varied environmental conditions.",
+    "question": "Which of the following options is the closest in meaning to the phrase underlined in the sentence below?\n\nIt is fascinating to see life forms <u>cope with</u> varied environmental conditions.",
     "options": [
       "adopt to",
       "adapt to",
@@ -7460,7 +7460,7 @@
     "subject": "General Aptitude",
     "topic": "verbal_ability",
     "difficulty": "Easy",
-    "question": "While trying to collect an envelope from under the table, Mr. X fell down and  \n               I                                                         II                           III                           \nwas losing consciousness. \n              IV \nWhich one of the above underlined parts of the sentence is NOT appropriate?",
+    "question": "<u>While trying to collect an envelope</u> (I) <u>from under the table</u> (II), <u>Mr. X fell down and</u> (III) <u>was losing consciousness</u> (IV).\n\nWhich one of the above underlined parts of the sentence is NOT appropriate?",
     "options": [
       "I",
       "II",
@@ -14400,7 +14400,7 @@
     "subject": "General Aptitude",
     "topic": "verbal_ability",
     "difficulty": "Easy",
-    "question": "Nobody knows how the Indian cricket team is going to cope with the difficult and seamer-friendly \nwickets in Australia.  \n \nChoose the option which is closest in meaning to the underlined phrase in the above sentence.",
+    "question": "Nobody knows how the Indian cricket team is going to <u>cope with</u> the difficult and seamer-friendly wickets in Australia.\n\nChoose the option which is closest in meaning to the underlined phrase in the above sentence.",
     "options": [
       "put up with",
       "put in with",
@@ -19491,7 +19491,7 @@
     "subject": "Databases",
     "topic": "database_design_indexing",
     "difficulty": "Medium",
-    "question": "Consider the following four relational schemas. For each schema, all non-trivial functional \ndependencies are listed. The underlined attributes are the respective primary keys. \n \nSchema I: Registration (rollno, courses) \nField 'courses' is a set-valued attribute containing the set of courses a student has \nregistered for.  \nNon-trivial functional dependency:  \nrollno  courses \n \nSchema II: Registration (rollno, courseid, email) \nNon-trivial functional dependencies: \nrollno, courseid  email \nemail  rollno \n \nSchema III: Registration (rollno, courseid, marks, grade) \nNon-trivial functional dependencies: \nrollno, courseid  marks, grade \nmarks  grade \n \nSchema IV: Registration (rollno, courseid, credit) \nNon-trivial functional dependencies:  \nrollno, courseid  credit \n            courseid  credit \n \n \nWhich one of the relational schemas above is in 3NF but not in BCNF?",
+    "question": "Consider the following four relational schemas. For each schema, all non-trivial functional dependencies are listed. The underlined attributes are the respective primary keys.\n\nSchema I: Registration (<u>rollno</u>, courses)\nField 'courses' is a set-valued attribute containing the set of courses a student has registered for.\nNon-trivial functional dependency:\nrollno → courses\n\nSchema II: Registration (<u>rollno</u>, <u>courseid</u>, email)\nNon-trivial functional dependencies:\nrollno, courseid → email\nemail → rollno\n\nSchema III: Registration (<u>rollno</u>, <u>courseid</u>, marks, grade)\nNon-trivial functional dependencies:\nrollno, courseid → marks, grade\nmarks → grade\n\nSchema IV: Registration (<u>rollno</u>, <u>courseid</u>, credit)\nNon-trivial functional dependencies:\nrollno, courseid → credit\ncourseid → credit\n\nWhich one of the relational schemas above is in 3NF but not in BCNF?",
     "options": [
       "Schema I",
       "Schema II",
