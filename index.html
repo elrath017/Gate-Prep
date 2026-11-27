@@ -321,7 +321,7 @@
                 </div>
 
                 <div class="tactile-slider-wrap">
-                  <input type="range" min="10" max="100" step="5" value="80" class="tactile-range-input" id="importance-slider">
+                  <input type="range" min="10" max="100" step="1" value="80" class="tactile-range-input" id="importance-slider">
                   <div class="slider-tick-labels">
                     <span>10%</span>
                     <span>30%</span>
@@ -361,18 +361,18 @@
             <div class="view-title-block" style="margin-bottom: var(--space-4);">
               <div>
                 <h2>Subject Mastery Constellation</h2>
-                <p class="view-subheading">Levels reflect your real question solving accuracy and depth (Beginner, Solid, Strong, Exam-Ready).</p>
+                <p class="view-subheading">Levels reflect your question solving accuracy (Beginner, Solid, Strong, Exam-Ready). Click any subject or topic chip to start practicing immediately with active filters.</p>
               </div>
             </div>
 
             <div class="mastery-nodes-grid" id="mastery-nodes-grid">
-              <!-- Dynamically populated 11 subject cards -->
+              <!-- Dynamically populated 11 subject cards with topic chips -->
             </div>
           </div>
 
           <!-- Grouped Syllabus & Subtopics Accordion -->
           <div class="syllabus-section">
-            <div class="view-title-block" style="margin-bottom: var(--space-4);">
+            <div class="view-title-block" style="margin-bottom: var(--space-3);">
               <div>
                 <h2>Detailed Syllabus & Subtopics Breakdown</h2>
                 <span class="view-subheading" id="selected-summary-text">Showing all 11 subjects</span>
@@ -381,9 +381,25 @@
               <!-- Subtopic Filter Toolbar -->
               <div class="subtopic-filter-toolbar">
                 <button class="btn-filter-pill active" id="filter-subtopics-all" data-sf="all">All Subtopics</button>
-                <button class="btn-filter-pill" id="filter-subtopics-important" data-sf="important">⭐ High Importance Only</button>
+                <button class="btn-filter-pill" id="filter-subtopics-important" data-sf="important">⭐ High Priority Only</button>
                 <button class="btn-filter-pill" id="filter-subtopics-pending" data-sf="pending">⏳ Pending Focus</button>
                 <button class="btn btn-secondary btn-xs" id="btn-toggle-all-subtopics">Expand All</button>
+              </div>
+            </div>
+
+            <!-- Legend strip explaining highlights and score -->
+            <div class="syllabus-legend-strip">
+              <div class="legend-strip-item">
+                <span class="legend-badge-amber">In Plan</span>
+                <span><strong>Amber Border & Glow:</strong> Topic is included in your current Exam Goal target.</span>
+              </div>
+              <div class="legend-strip-item">
+                <span class="legend-badge-star">⭐ High Priority</span>
+                <span><strong>High Yield Subtopic:</strong> Most frequently tested core GATE CS concepts.</span>
+              </div>
+              <div class="legend-strip-item">
+                <span class="legend-badge-info">Score & %</span>
+                <span><strong>Score:</strong> Historical exam marks per study hour. <strong>Exam %:</strong> Share of 100 marks. <strong>Subtopic %:</strong> Weight within that topic.</span>
               </div>
             </div>
 

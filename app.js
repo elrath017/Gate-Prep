@@ -81,6 +81,7 @@
       currentIndex: 0,
       isErrorMode: false,
       isSpacedReviewMode: false,
+      justEvaluatedQid: null,
       activeList: []
     },
     allPyqs: {
@@ -92,7 +93,8 @@
       bookmarkedOnly: false,
       page: 1,
       pageSize: 15,
-      showAnswersAll: false
+      showAnswersAll: false,
+      justEvaluatedQids: new Set()
     },
     mockTest: {
       active: false,
@@ -158,6 +160,7 @@
     } catch (e) {}
 
     applyTheme(state.theme);
+    migrateSolvedHistory();
     setupNavigation();
     initThemeToggle();
     initExamDateModal();
@@ -347,10 +350,25 @@
     const titleEl = document.getElementById('header-active-tab-title');
     if (titleEl) titleEl.textContent = tabLabels[tabId] || 'Observatory';
 
+    // Reset per-visit evaluation highlight flags when revisiting tabs
+    state.topicMode.justEvaluatedQid = null;
+    if (tabId === 'all') {
+      state.allPyqs.justEvaluatedQids.clear();
+    }
+
     // Refresh Tab Data
     if (tabId === 'today') renderTodayMission();
     if (tabId === 'plan') { renderPlan(); renderMasteryMap(); }
-    if (tabId === 'topic') renderTopicPractice();
+    if (tabId === 'topic') {
+      syncTopicDropdowns();
+      if (!state.topicMode.activeList || state.topicMode.activeList.length === 0 ||
+          (!state.topicMode.isErrorMode && !state.topicMode.isSpacedReviewMode &&
+           state.topicMode.activeList[0] && state.topicMode.activeList[0].topic !== state.topicMode.topic)) {
+        loadTopicQuestions();
+      } else {
+        renderTopicPractice();
+      }
+    }
     if (tabId === 'all') renderAllQuestionsList();
     if (tabId === 'mock') renderMockLobby();
 
@@ -481,6 +499,168 @@
   }
 
   // =========================================================================
+  // 6B. ATTEMPT HISTORY & WRONG-ANSWER REVISIT HELPERS
+  // =========================================================================
+  function formatAnswerText(q, studentAns) {
+    if (studentAns === null || studentAns === undefined) return 'None';
+    if (q.type === 'MCQ') {
+      const idx = parseInt(studentAns, 10);
+      if (isNaN(idx)) return String(studentAns);
+      const letter = String.fromCharCode(65 + idx);
+      const optVal = (q.options && q.options[idx]) ? String(q.options[idx]).trim() : '';
+      const hasDistinctText = !q.image && optVal && optVal !== letter && optVal !== `(${letter})`;
+      return hasDistinctText ? `Option ${letter} (${optVal.slice(0, 40)}${optVal.length > 40 ? '…' : ''})` : `Option ${letter}`;
+    }
+    if (q.type === 'MSQ') {
+      if (!Array.isArray(studentAns) || studentAns.length === 0) return 'None';
+      return studentAns.map(idx => `Option ${String.fromCharCode(65 + idx)}`).join(', ');
+    }
+    if (q.type === 'NAT') {
+      return `${studentAns}`;
+    }
+    return String(studentAns);
+  }
+
+  function formatHistoryDate(ts) {
+    if (!ts) return '';
+    try {
+      return new Date(ts).toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function getQuestionHistory(q, sol) {
+    if (!sol) return [];
+    if (Array.isArray(sol.history) && sol.history.length > 0) {
+      return sol.history.map((item, idx) => ({
+        ...item,
+        attempt: item.attempt || (idx + 1),
+        ansText: item.ansText || (q ? formatAnswerText(q, item.studentAns) : String(item.studentAns)),
+        dateStr: item.dateStr || formatHistoryDate(item.timestamp)
+      }));
+    }
+    if (sol.attempted && sol.studentAns !== undefined && sol.studentAns !== null) {
+      return [{
+        attempt: 1,
+        studentAns: sol.studentAns,
+        ansText: q ? formatAnswerText(q, sol.studentAns) : String(sol.studentAns),
+        correct: !!sol.correct,
+        timestamp: sol.timestamp || Date.now(),
+        dateStr: formatHistoryDate(sol.timestamp)
+      }];
+    }
+    return [];
+  }
+
+  function migrateSolvedHistory() {
+    let changed = false;
+    for (const qid in state.solvedQuestions) {
+      const sol = state.solvedQuestions[qid];
+      if (!sol || !sol.attempted) continue;
+      if (!Array.isArray(sol.history) || sol.history.length === 0) {
+        const q = QUESTIONS.find(x => x.id === qid);
+        sol.history = getQuestionHistory(q, sol);
+        changed = true;
+      }
+    }
+    if (changed) {
+      setStorage(STORAGE_KEYS.SOLVED_STATE, state.solvedQuestions);
+    }
+  }
+
+  function recordQuestionAttempt(q, studentAns, isCorrect) {
+    const qid = q.id;
+    const prevSol = state.solvedQuestions[qid] || null;
+    const history = getQuestionHistory(q, prevSol);
+
+    const now = Date.now();
+    history.push({
+      attempt: history.length + 1,
+      studentAns: studentAns,
+      ansText: formatAnswerText(q, studentAns),
+      correct: isCorrect,
+      timestamp: now,
+      dateStr: formatHistoryDate(now)
+    });
+
+    const newWrongCount = history.filter(h => !h.correct).length;
+    const prevWrongCount = prevSol ? (prevSol.wrongCount || history.slice(0, -1).filter(h => !h.correct).length) : 0;
+
+    state.solvedQuestions[qid] = {
+      attempted: true,
+      correct: isCorrect,
+      studentAns: studentAns,
+      wrongCount: newWrongCount,
+      timestamp: now,
+      history: history
+    };
+
+    setStorage(STORAGE_KEYS.SOLVED_STATE, state.solvedQuestions);
+    recordDailyActivity();
+
+    if (isCorrect) {
+      const xpGain = (q.marks * 10) + (prevWrongCount > 0 ? 15 : 0);
+      addXp(xpGain, 'Question Correct');
+      if (prevWrongCount > 0) triggerConfetti();
+    }
+
+    updateHeaderStats();
+    return { prevWrongCount, newWrongCount, history };
+  }
+
+  function buildHistoryBannerHtml(q, sol, isRevisitedReset) {
+    const history = getQuestionHistory(q, sol);
+    if (history.length === 0) return '';
+
+    const wrongAttempts = history.filter(h => !h.correct);
+    if (wrongAttempts.length === 0 && !isRevisitedReset) return '';
+
+    const lastWrong = wrongAttempts[wrongAttempts.length - 1];
+    const isResolved = sol && sol.correct && !isRevisitedReset;
+    const badgeLabel = wrongAttempts.length > 0
+      ? `${wrongAttempts.length} wrong attempt${wrongAttempts.length > 1 ? 's' : ''}`
+      : `${history.length} attempt${history.length > 1 ? 's' : ''}`;
+
+    const summaryTitle = isRevisitedReset
+      ? '<strong>Question Reset for Retry</strong> — previous wrong answer saved in history'
+      : (isResolved
+          ? '<strong>Resolved</strong> — past mistake history preserved'
+          : '<strong>Attempt History</strong>');
+
+    return `
+      <div class="q-history-banner ${isResolved ? 'has-correct' : ''}">
+        <div class="q-history-header" data-history-toggle="${q.id}">
+          <div class="q-history-summary">
+            <span class="history-icon">${isResolved ? '✓' : '↺'}</span>
+            <span class="history-title">${summaryTitle}</span>
+            <span class="history-pill ${isResolved ? 'resolved' : ''}">${badgeLabel}</span>
+            ${lastWrong ? `<span class="history-last-ans">Last wrong: <strong>${lastWrong.ansText}</strong></span>` : ''}
+          </div>
+          <button type="button" class="btn-toggle-history-details" aria-expanded="false">
+            <span>History (${history.length})</span> <span class="history-arrow">▼</span>
+          </button>
+        </div>
+        <div class="q-history-details collapsed">
+          ${history.slice().reverse().map(item => `
+            <div class="history-item ${item.correct ? 'correct' : 'wrong'}">
+              <span class="history-attempt-num">Attempt #${item.attempt}</span>
+              <span class="history-ans-text">Answered <strong>${item.ansText}</strong></span>
+              <span class="history-status-tag ${item.correct ? 'correct' : 'wrong'}">${item.correct ? '✓ Correct' : '✗ Wrong'}</span>
+              <span class="history-timestamp">${item.dateStr || ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // =========================================================================
   // 7. TAB 1: TODAY'S MISSION CONTROLLER
   // =========================================================================
   function initTodayTab() {
@@ -496,10 +676,8 @@
       g1Btn.addEventListener('click', () => {
         const best = getBestNextTopic();
         if (best) {
-          state.topicMode.subject = best.subject_id;
-          state.topicMode.topic = best.id;
-          state.topicMode.isErrorMode = false;
-          state.topicMode.isSpacedReviewMode = false;
+          navigateToTopicPractice(best.subject_id, best.id);
+        } else {
           switchTab('topic');
         }
       });
@@ -512,6 +690,8 @@
     if (g3Btn || revBtn) {
       const startRev = () => {
         const due = getSpacedReviewDueQuestions();
+        state.topicMode.justEvaluatedQid = null;
+        state.topicMode.retakeQid = null;
         if (due.length > 0) {
           state.topicMode.isSpacedReviewMode = true;
           state.topicMode.isErrorMode = false;
@@ -522,6 +702,7 @@
           // If no spaced review, fall back to general error log
           state.topicMode.isErrorMode = true;
           state.topicMode.isSpacedReviewMode = false;
+          loadTopicQuestions();
           switchTab('topic');
         }
       };
@@ -533,9 +714,8 @@
       nextStepBtn.addEventListener('click', () => {
         const best = getBestNextTopic();
         if (best) {
-          state.topicMode.subject = best.subject_id;
-          state.topicMode.topic = best.id;
-          state.topicMode.isErrorMode = false;
+          navigateToTopicPractice(best.subject_id, best.id);
+        } else {
           switchTab('topic');
         }
       });
@@ -789,6 +969,42 @@
     return highYieldKeywords.some(k => s.includes(k));
   }
 
+  function computeSubtopicPercentages(topicObj, subtopics) {
+    if (!subtopics || subtopics.length === 0) return {};
+    
+    const scored = subtopics.map(sub => {
+      const sLower = sub.toLowerCase();
+      const isImp = isSubtopicImportant(sLower);
+      let raw = 20 + (isImp ? 25 : 0) + (sub.length > 35 ? 8 : 0);
+
+      if (typeof QUESTIONS !== 'undefined' && QUESTIONS.length > 0 && topicObj && topicObj.id) {
+        const topicQs = QUESTIONS.filter(q => q.topic === topicObj.id);
+        const subTerms = sLower.split(/[,:;]|\band\b/).map(t => t.trim()).filter(t => t.length > 2);
+        let matches = 0;
+        topicQs.slice(0, 40).forEach(q => {
+          const hay = ((q.question || '') + ' ' + (q.explanation || '')).toLowerCase();
+          if (subTerms.some(term => hay.includes(term))) matches++;
+        });
+        raw += Math.min(matches, 25);
+      }
+      return { sub, raw };
+    });
+
+    const sumRaw = scored.reduce((s, x) => s + x.raw, 0);
+    const result = {};
+    let totalDistributed = 0;
+    scored.forEach((item, idx) => {
+      if (idx === scored.length - 1) {
+        result[item.sub] = Math.max(1, 100 - totalDistributed);
+      } else {
+        const pct = Math.max(1, Math.round((item.raw / sumRaw) * 100));
+        result[item.sub] = pct;
+        totalDistributed += pct;
+      }
+    });
+    return result;
+  }
+
   function computeSelectedTopics() {
     const totalPriority = TOPICS.reduce((sum, t) => sum + (t.priority_score || 0), 0);
     const targetPriority = (state.sliderGoal / 100) * totalPriority;
@@ -874,11 +1090,17 @@
     if (!accordionContainer) return;
     accordionContainer.innerHTML = '';
 
+    const totalExamPriority = TOPICS.reduce((sum, t) => sum + (t.priority_score || 0), 0);
+
     SYLLABUS.forEach(subj => {
       const subjTopics = subj.topics || [];
       const totalInSubj = subjTopics.length;
       const completedInSubj = subjTopics.filter(t => state.completedTopics.has(t.id)).length;
       const progressPct = totalInSubj > 0 ? Math.round((completedInSubj / totalInSubj) * 100) : 0;
+      const subjTotalPriority = subjTopics.reduce((sum, t) => {
+        const info = TOPICS.find(x => x.id === t.id);
+        return sum + (info ? (info.priority_score || 0) : 0);
+      }, 0);
 
       const card = document.createElement('div');
       card.className = 'subject-group-card';
@@ -908,6 +1130,10 @@
         const isCompleted = state.completedTopics.has(top.id);
         const subList = top.subtopics || [];
 
+        const topicExamPct = totalExamPriority > 0 ? (((topInfo.priority_score || 0) / totalExamPriority) * 100).toFixed(1) : '0.0';
+        const topicSubjPct = subjTotalPriority > 0 ? (((topInfo.priority_score || 0) / subjTotalPriority) * 100).toFixed(1) : '0.0';
+        const subWeights = computeSubtopicPercentages(top, subList);
+
         const visibleSubtopics = subList.filter(sub => {
           const isImp = isSubtopicImportant(sub);
           const isSubDone = state.completedSubtopics.has(sub);
@@ -925,13 +1151,22 @@
         pill.innerHTML = `
           <div class="topic-card-top">
             <span class="topic-card-name">${top.name}</span>
-            <label class="topic-checkbox-label" onclick="event.stopPropagation()">
-              <input type="checkbox" class="topic-checkbox" ${isCompleted ? 'checked' : ''} style="accent-color: var(--status-correct); cursor: pointer;">
-              Done
-            </label>
+            <div class="topic-card-actions" onclick="event.stopPropagation()">
+              <button type="button" class="btn-practice-topic" data-subjid="${subj.id}" data-topicid="${top.id}" title="Practice ${top.name} questions now">
+                Practice ➔
+              </button>
+              <label class="topic-checkbox-label" onclick="event.stopPropagation()">
+                <input type="checkbox" class="topic-checkbox" ${isCompleted ? 'checked' : ''} style="accent-color: var(--status-correct); cursor: pointer;">
+                Done
+              </label>
+            </div>
           </div>
           <div class="topic-meta-row">
-            <span class="topic-badge-score">Score: ${topInfo.priority_score || '—'}</span>
+            <span class="topic-badge-score" title="Yield score = Historical Marks / Study Hours">Score: ${topInfo.priority_score || '—'}</span>
+            <span>•</span>
+            <span class="topic-badge-weight" title="${topicExamPct}% of entire GATE CS exam">${topicExamPct}% Exam</span>
+            <span>•</span>
+            <span class="topic-badge-subjweight" title="${topicSubjPct}% of ${subj.name}">${topicSubjPct}% of ${subj.id}</span>
             <span>•</span>
             <span>${topInfo.estimated_hours || 20} hrs</span>
             <span>•</span>
@@ -940,25 +1175,48 @@
 
           <div class="subtopic-details-box" style="display: ${isExpanded ? 'flex' : 'none'};" onclick="event.stopPropagation()">
             <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">
-              Subtopics (${visibleSubtopics.length} of ${subList.length}):
+              Subtopics (${visibleSubtopics.length} of ${subList.length}) — Topic Importance:
             </div>
             ${visibleSubtopics.map(sub => {
               const isImp = isSubtopicImportant(sub);
               const isSubDone = state.completedSubtopics.has(sub);
+              const subPct = subWeights[sub] || Math.round(100 / Math.max(subList.length, 1));
               return `
                 <div class="subtopic-item ${isImp ? 'is-important' : ''}">
                   <input type="checkbox" class="subtopic-checkbox" ${isSubDone ? 'checked' : ''} data-sub="${sub}" style="accent-color: var(--status-correct); cursor: pointer;">
                   <span style="${isSubDone ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${sub}</span>
-                  ${isImp ? '<span class="subtopic-imp-tag">High Priority</span>' : ''}
+                  <span class="subtopic-pct-tag" title="${subPct}% importance within ${top.name}">${subPct}%</span>
+                  ${isImp ? '<span class="subtopic-imp-tag" title="Frequently tested GATE concept">⭐ High Priority</span>' : ''}
+                  <button type="button" class="btn-subtopic-practice" data-subjid="${subj.id}" data-topicid="${top.id}" data-sub="${sub}" title="Practice questions matching '${sub}'">➔</button>
                 </div>
               `;
             }).join('')}
           </div>
         `;
 
+        // Direct Practice Topic button
+        const btnPractice = pill.querySelector('.btn-practice-topic');
+        if (btnPractice) {
+          btnPractice.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigateToTopicPractice(subj.id, top.id);
+          });
+        }
+
+        // Direct Subtopic practice buttons
+        pill.querySelectorAll('.btn-subtopic-practice').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const sid = btn.dataset.subjid;
+            const tid = btn.dataset.topicid;
+            const sName = btn.dataset.sub;
+            navigateToTopicPractice(sid, tid, sName);
+          });
+        });
+
         // Toggle selection
         pill.addEventListener('click', (e) => {
-          if (e.target.closest('.subtopic-details-box')) return;
+          if (e.target.closest('.subtopic-details-box') || e.target.closest('.topic-card-actions')) return;
           const currentlySelected = selectedSet.has(top.id);
           state.planOverrides[top.id] = !currentlySelected;
           setStorage(STORAGE_KEYS.PLAN_OVERRIDES, state.planOverrides);
@@ -1006,6 +1264,8 @@
     const grid = document.getElementById('mastery-nodes-grid');
     if (!grid) return;
 
+    const totalExamPriority = TOPICS.reduce((sum, t) => sum + (t.priority_score || 0), 0);
+
     let html = '';
     SYLLABUS.forEach(subj => {
       const subjQs = QUESTIONS.filter(q => q.subject_id === subj.id || q.subject === subj.name);
@@ -1036,8 +1296,20 @@
         tierLabel = 'Solid';
       }
 
+      const subjTopics = subj.topics || [];
+      const topicsHtml = subjTopics.map(t => {
+        const topInfo = TOPICS.find(x => x.id === t.id) || {};
+        const examPct = totalExamPriority > 0 ? (((topInfo.priority_score || 0) / totalExamPriority) * 100).toFixed(1) : '0.0';
+        return `
+          <div class="mastery-topic-pill" data-subjid="${subj.id}" data-topicid="${t.id}" title="Click to practice ${t.name} (${examPct}% of entire GATE exam)">
+            <span class="mastery-topic-pill-name">${t.name}</span>
+            <span class="mastery-topic-pill-pct">${examPct}%</span>
+          </div>
+        `;
+      }).join('');
+
       html += `
-        <div class="mastery-subject-card" data-subjid="${subj.id}">
+        <div class="mastery-subject-card" data-subjid="${subj.id}" title="Click subject to practice its questions">
           <div class="mastery-top-row">
             <span class="mastery-code">${subj.id}</span>
             <span class="mastery-tier-badge ${tier}">${tierLabel}</span>
@@ -1052,19 +1324,30 @@
           <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">
             ${attempted} / ${totalQs} Qs attempted
           </div>
+          <div class="mastery-topics-list">
+            ${topicsHtml}
+          </div>
         </div>
       `;
     });
 
     grid.innerHTML = html;
 
+    // Attach click listeners to topic chips inside the card
+    grid.querySelectorAll('.mastery-topic-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sid = pill.dataset.subjid;
+        const tid = pill.dataset.topicid;
+        navigateToTopicPractice(sid, tid);
+      });
+    });
+
+    // Subject card click defaults to subject's first topic
     grid.querySelectorAll('.mastery-subject-card').forEach(card => {
       card.addEventListener('click', () => {
         const sid = card.dataset.subjid;
-        state.topicMode.subject = sid;
-        state.topicMode.isErrorMode = false;
-        state.topicMode.isSpacedReviewMode = false;
-        switchTab('topic');
+        navigateToTopicPractice(sid);
       });
     });
   }
@@ -1072,6 +1355,66 @@
   // =========================================================================
   // 10. TAB 3: TOPIC-WISE PYQs & PRACTICE SCREEN
   // =========================================================================
+  function syncTopicDropdowns() {
+    const subjSelect = document.getElementById('topic-subject-select');
+    const topicSelect = document.getElementById('topic-topic-select');
+    const subtopicSelect = document.getElementById('topic-subtopic-select');
+    if (!subjSelect || !topicSelect) return;
+
+    if (subjSelect.children.length === 0) {
+      subjSelect.innerHTML = SYLLABUS.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    }
+
+    if (state.topicMode.subject) {
+      subjSelect.value = state.topicMode.subject;
+    } else if (SYLLABUS.length > 0) {
+      state.topicMode.subject = SYLLABUS[0].id;
+      subjSelect.value = state.topicMode.subject;
+    }
+
+    const subj = SYLLABUS.find(s => s.id === state.topicMode.subject);
+    if (subj && subj.topics) {
+      topicSelect.innerHTML = subj.topics.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      if (state.topicMode.topic && subj.topics.some(t => t.id === state.topicMode.topic)) {
+        topicSelect.value = state.topicMode.topic;
+      } else if (subj.topics.length > 0) {
+        state.topicMode.topic = subj.topics[0].id;
+        topicSelect.value = state.topicMode.topic;
+      }
+    }
+
+    if (subtopicSelect) {
+      const top = subj ? (subj.topics || []).find(t => t.id === state.topicMode.topic) : null;
+      const subs = top ? (top.subtopics || []) : [];
+      subtopicSelect.innerHTML = '<option value="all">All Subtopics</option>' +
+        subs.map(sb => {
+          const isImp = isSubtopicImportant(sb);
+          return `<option value="${sb}">${isImp ? '⭐ ' : ''}${sb}</option>`;
+        }).join('');
+      subtopicSelect.value = state.topicMode.subtopic || 'all';
+    }
+  }
+
+  function navigateToTopicPractice(subjId, topicId = null, subtopic = 'all') {
+    if (subjId) state.topicMode.subject = subjId;
+    const subj = SYLLABUS.find(s => s.id === state.topicMode.subject);
+    if (topicId) {
+      state.topicMode.topic = topicId;
+    } else if (subj && subj.topics && subj.topics.length > 0) {
+      state.topicMode.topic = subj.topics[0].id;
+    }
+    state.topicMode.subtopic = subtopic || 'all';
+    state.topicMode.isErrorMode = false;
+    state.topicMode.isSpacedReviewMode = false;
+    state.topicMode.currentIndex = 0;
+    state.topicMode.justEvaluatedQid = null;
+    state.topicMode.retakeQid = null;
+
+    syncTopicDropdowns();
+    loadTopicQuestions();
+    switchTab('topic');
+  }
+
   function initTopicTab() {
     const subjSelect = document.getElementById('topic-subject-select');
     const topicSelect = document.getElementById('topic-topic-select');
@@ -1080,42 +1423,25 @@
 
     if (!subjSelect || !topicSelect) return;
 
-    subjSelect.innerHTML = SYLLABUS.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-
-    function populateSubtopicsForTopic() {
-      if (!subtopicSelect) return;
-      const subj = SYLLABUS.find(s => s.id === state.topicMode.subject);
-      const top = subj ? (subj.topics || []).find(t => t.id === state.topicMode.topic) : null;
-      const subs = top ? (top.subtopics || []) : [];
-      subtopicSelect.innerHTML = '<option value="all">All Subtopics</option>' +
-        subs.map(sb => {
-          const isImp = isSubtopicImportant(sb);
-          return `<option value="${sb}">${isImp ? '⭐ ' : ''}${sb}</option>`;
-        }).join('');
-      state.topicMode.subtopic = 'all';
-    }
-
-    function populateTopicsForSubject(subjId) {
-      const subj = SYLLABUS.find(s => s.id === subjId);
-      if (!subj) return;
-      topicSelect.innerHTML = subj.topics.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-      state.topicMode.topic = topicSelect.value;
-      populateSubtopicsForTopic();
-      loadTopicQuestions();
-    }
+    syncTopicDropdowns();
 
     subjSelect.addEventListener('change', (e) => {
       state.topicMode.subject = e.target.value;
+      const subj = SYLLABUS.find(s => s.id === state.topicMode.subject);
+      state.topicMode.topic = subj && subj.topics && subj.topics[0] ? subj.topics[0].id : null;
+      state.topicMode.subtopic = 'all';
       state.topicMode.isErrorMode = false;
       state.topicMode.isSpacedReviewMode = false;
-      populateTopicsForSubject(state.topicMode.subject);
+      syncTopicDropdowns();
+      loadTopicQuestions();
     });
 
     topicSelect.addEventListener('change', (e) => {
       state.topicMode.topic = e.target.value;
+      state.topicMode.subtopic = 'all';
       state.topicMode.isErrorMode = false;
       state.topicMode.isSpacedReviewMode = false;
-      populateSubtopicsForTopic();
+      syncTopicDropdowns();
       loadTopicQuestions();
     });
 
@@ -1134,10 +1460,8 @@
       });
     }
 
-    if (SYLLABUS.length > 0) {
-      state.topicMode.subject = SYLLABUS[0].id;
-      subjSelect.value = state.topicMode.subject;
-      populateTopicsForSubject(state.topicMode.subject);
+    if (!state.topicMode.activeList || state.topicMode.activeList.length === 0) {
+      loadTopicQuestions();
     }
   }
 
@@ -1167,9 +1491,11 @@
       let filtered = QUESTIONS.filter(q => q.topic === state.topicMode.topic);
       if (state.topicMode.subtopic && state.topicMode.subtopic !== 'all') {
         const needle = state.topicMode.subtopic.toLowerCase();
+        const subKeywords = needle.split(/[,:;]|\band\b/).map(k => k.trim()).filter(k => k.length > 2);
         const matched = filtered.filter(q => {
-          const hay = ((q.question || '') + ' ' + (q.options || []).join(' ')).toLowerCase();
-          return hay.includes(needle);
+          const hay = ((q.question || '') + ' ' + (q.options || []).join(' ') + ' ' + (q.explanation || '')).toLowerCase();
+          if (hay.includes(needle)) return true;
+          return subKeywords.some(kw => hay.includes(kw));
         });
         if (matched.length > 0) filtered = matched;
       }
@@ -1178,6 +1504,8 @@
     }
 
     state.topicMode.currentIndex = 0;
+    state.topicMode.justEvaluatedQid = null;
+    state.topicMode.retakeQid = null;
     renderTopicPractice();
   }
 
@@ -1225,6 +1553,11 @@
     const q = list[curIdx];
     const isBookmarked = state.bookmarkedQids.has(q.id);
     const existingSol = state.solvedQuestions[q.id] || null;
+    const isJustEvaluated = state.topicMode.justEvaluatedQid === q.id;
+    const isRetaking = state.topicMode.retakeQid === q.id;
+    // Revisiting a wrong question (not just submitted right now) automatically resets its active inputs
+    const isRevisitedWrong = !!(existingSol && existingSol.attempted && !existingSol.correct && !isJustEvaluated);
+    const showEvaluation = !!(existingSol && existingSol.attempted && !isRevisitedWrong && !isRetaking);
 
     let inputHtml = '';
     const isImageQ = !!q.image;
@@ -1235,9 +1568,9 @@
         <div class="options-list ${isImageQ ? 'image-options-row' : ''}" id="topic-options-list">
           ${effectiveOpts.map((opt, i) => {
             const letter = String.fromCharCode(65 + i);
-            const isSelected = existingSol && existingSol.studentAns === i;
+            const isSelected = showEvaluation && existingSol.studentAns === i;
             let revealClass = '';
-            if (existingSol && existingSol.attempted) {
+            if (showEvaluation) {
               if (q.correct_answer.includes(i)) revealClass = 'correct-reveal';
               else if (isSelected && !existingSol.correct) revealClass = 'wrong-reveal';
             }
@@ -1256,9 +1589,9 @@
         <div class="options-list ${isImageQ ? 'image-options-row' : ''}" id="topic-options-list">
           ${effectiveOpts.map((opt, i) => {
             const letter = String.fromCharCode(65 + i);
-            const isChecked = existingSol && Array.isArray(existingSol.studentAns) && existingSol.studentAns.includes(i);
+            const isChecked = showEvaluation && Array.isArray(existingSol.studentAns) && existingSol.studentAns.includes(i);
             let revealClass = '';
-            if (existingSol && existingSol.attempted) {
+            if (showEvaluation) {
               if (q.correct_answer.includes(i)) revealClass = 'correct-reveal';
               else if (isChecked && !q.correct_answer.includes(i)) revealClass = 'wrong-reveal';
             }
@@ -1274,7 +1607,7 @@
         </div>
       `;
     } else if (q.type === 'NAT') {
-      const val = existingSol && existingSol.studentAns !== undefined ? existingSol.studentAns : '';
+      const val = (showEvaluation && existingSol.studentAns !== undefined) ? existingSol.studentAns : '';
       inputHtml = `
         <div class="nat-input-wrapper">
           <label for="topic-nat-input" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Enter Numerical Value:</label>
@@ -1284,7 +1617,7 @@
     }
 
     let feedbackHtml = '';
-    if (existingSol && existingSol.attempted) {
+    if (showEvaluation) {
       const isCor = existingSol.correct;
       let ansLabel = '';
       if (q.type === 'MCQ' || q.type === 'MSQ') {
@@ -1297,14 +1630,20 @@
 
       feedbackHtml = `
         <div class="answer-feedback-box ${isCor ? 'correct' : 'incorrect'}">
-          <div class="feedback-status-row">
+          <div class="feedback-status-row" style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);">
             <span>${isCor ? '✅ Correct Answer!' : '❌ Incorrect'}</span>
+            <button type="button" class="btn btn-secondary btn-xs btn-topic-retry-now" id="btn-topic-retry-now" title="Reset this question to try again fresh">
+              🔄 ${isCor ? 'Retake Fresh' : 'Try Again'}
+            </button>
           </div>
           <div class="feedback-key">Official Answer Key: <strong>${ansLabel}</strong></div>
           ${q.explanation ? `<div class="feedback-explanation"><strong>Explanation:</strong> ${q.explanation}</div>` : ''}
         </div>
       `;
     }
+
+    const historyBannerHtml = buildHistoryBannerHtml(q, existingSol, isRevisitedWrong || isRetaking);
+    const checkBtnLabel = showEvaluation ? 'Re-check' : 'Check Answer';
 
     container.innerHTML = `
       <div class="question-card" data-qid="${q.id}">
@@ -1320,6 +1659,8 @@
             ${isBookmarked ? '★' : '☆'}
           </button>
         </div>
+
+        ${historyBannerHtml}
 
         <div class="q-statement">${q.question}</div>
 
@@ -1344,11 +1685,36 @@
               <span class="kbd-chip">1-4</span> Pick
               <span class="kbd-chip">Enter</span> Check
             </div>
-            <button class="btn btn-primary" id="btn-topic-check">${existingSol ? 'Re-check' : 'Check Answer'}</button>
+            <button class="btn btn-primary" id="btn-topic-check">${checkBtnLabel}</button>
           </div>
         </div>
       </div>
     `;
+
+    // Bind History toggle
+    const histHeader = container.querySelector('.q-history-header');
+    if (histHeader) {
+      histHeader.addEventListener('click', () => {
+        const details = container.querySelector('.q-history-details');
+        const btnToggle = histHeader.querySelector('.btn-toggle-history-details');
+        const arrow = histHeader.querySelector('.history-arrow');
+        if (details) {
+          const isCollapsed = details.classList.toggle('collapsed');
+          if (btnToggle) btnToggle.setAttribute('aria-expanded', String(!isCollapsed));
+          if (arrow) arrow.textContent = isCollapsed ? '▼' : '▲';
+        }
+      });
+    }
+
+    // Bind immediate Try Again / Retake button
+    const retryNowBtn = container.querySelector('#btn-topic-retry-now');
+    if (retryNowBtn) {
+      retryNowBtn.addEventListener('click', () => {
+        state.topicMode.justEvaluatedQid = null;
+        state.topicMode.retakeQid = q.id;
+        renderTopicPractice();
+      });
+    }
 
     // Bind Option clicks
     if (q.type === 'MCQ') {
@@ -1388,6 +1754,8 @@
       prevBtn.addEventListener('click', () => {
         if (state.topicMode.currentIndex > 0) {
           state.topicMode.currentIndex--;
+          state.topicMode.justEvaluatedQid = null;
+          state.topicMode.retakeQid = null;
           renderTopicPractice();
         }
       });
@@ -1396,6 +1764,8 @@
       nextBtn.addEventListener('click', () => {
         if (state.topicMode.currentIndex < totalCount - 1) {
           state.topicMode.currentIndex++;
+          state.topicMode.justEvaluatedQid = null;
+          state.topicMode.retakeQid = null;
           renderTopicPractice();
         }
       });
@@ -1446,29 +1816,20 @@
       isCorrect = num >= (min - 1e-4) && num <= (max + 1e-4);
     }
 
-    const prevSol = state.solvedQuestions[q.id];
-    const prevWrongCount = prevSol ? (prevSol.wrongCount || 0) : 0;
-    const newWrongCount = isCorrect ? prevWrongCount : (prevWrongCount + 1);
+    recordQuestionAttempt(q, studentAns, isCorrect);
 
-    state.solvedQuestions[q.id] = {
-      attempted: true,
-      correct: isCorrect,
-      studentAns: studentAns,
-      wrongCount: newWrongCount,
-      timestamp: Date.now()
-    };
-
-    setStorage(STORAGE_KEYS.SOLVED_STATE, state.solvedQuestions);
-    recordDailyActivity();
-
-    // Reward XP
-    if (isCorrect) {
-      const xpGain = (q.marks * 10) + (prevWrongCount > 0 ? 15 : 0);
-      addXp(xpGain, 'Question Correct');
-      if (prevWrongCount > 0) triggerConfetti();
+    // Update error mode button count live without wiping active list yet
+    const errorModeText = document.getElementById('error-mode-text');
+    if (errorModeText) {
+      const wrongCountTotal = Object.values(state.solvedQuestions).filter(s => s && s.attempted && !s.correct).length;
+      errorModeText.textContent = state.topicMode.isErrorMode
+        ? `Back to Topic Mode (${wrongCountTotal} wrong)`
+        : `Retry Wrong Answers (${wrongCountTotal})`;
     }
 
-    updateHeaderStats();
+    state.topicMode.justEvaluatedQid = q.id;
+    state.topicMode.retakeQid = null;
+
     renderTopicPractice();
     renderTodayMission();
   }
@@ -1642,6 +2003,9 @@
 
       const existingSol = state.solvedQuestions[q.id] || null;
       const attempted = existingSol && existingSol.attempted;
+      const isJustEvaluatedAll = state.allPyqs.justEvaluatedQids.has(q.id);
+      const isRevisitedWrongAll = !!(attempted && !existingSol.correct && !isJustEvaluatedAll);
+      const showAttemptStateAll = !!(attempted && !isRevisitedWrongAll);
       const isImageQ = !!q.image;
       const effectiveOpts = (q.options && q.options.length > 0 && !isImageQ) ? q.options : ['A', 'B', 'C', 'D'];
 
@@ -1651,9 +2015,9 @@
           <div class="options-list ${isImageQ ? 'image-options-row' : ''} all-q-options" data-qid="${q.id}" style="margin-top: var(--space-2);">
             ${effectiveOpts.map((opt, i) => {
               const letter = String.fromCharCode(65 + i);
-              const isSelected = attempted && existingSol.studentAns === i;
+              const isSelected = showAttemptStateAll && existingSol.studentAns === i;
               let revealClass = '';
-              if (attempted) {
+              if (showAttemptStateAll) {
                 if (q.correct_answer.includes(i)) revealClass = 'correct-reveal';
                 else if (isSelected && !existingSol.correct) revealClass = 'wrong-reveal';
               } else if (showAns && q.correct_answer.includes(i)) {
@@ -1674,9 +2038,9 @@
           <div class="options-list ${isImageQ ? 'image-options-row' : ''} all-q-options" data-qid="${q.id}" style="margin-top: var(--space-2);">
             ${effectiveOpts.map((opt, i) => {
               const letter = String.fromCharCode(65 + i);
-              const isChecked = attempted && Array.isArray(existingSol.studentAns) && existingSol.studentAns.includes(i);
+              const isChecked = showAttemptStateAll && Array.isArray(existingSol.studentAns) && existingSol.studentAns.includes(i);
               let revealClass = '';
-              if (attempted) {
+              if (showAttemptStateAll) {
                 if (q.correct_answer.includes(i)) revealClass = 'correct-reveal';
                 else if (isChecked && !q.correct_answer.includes(i)) revealClass = 'wrong-reveal';
               } else if (showAns && q.correct_answer.includes(i)) {
@@ -1697,9 +2061,9 @@
           </div>
         `;
       } else if (q.type === 'NAT') {
-        const val = (attempted && existingSol.studentAns !== undefined) ? existingSol.studentAns : '';
+        const val = (showAttemptStateAll && existingSol.studentAns !== undefined) ? existingSol.studentAns : '';
         let natBadge = '';
-        if (attempted) {
+        if (showAttemptStateAll) {
           natBadge = existingSol.correct
             ? '<span style="color: var(--status-correct); font-size: 0.85rem; font-weight: 600;">✅ Correct</span>'
             : '<span style="color: var(--status-wrong); font-size: 0.85rem; font-weight: 600;">❌ Incorrect</span>';
@@ -1717,8 +2081,10 @@
       if (attempted) {
         statusPill = existingSol.correct
           ? '<span style="color: var(--status-correct); font-size: 0.78rem; font-weight: 600; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.25);">Solved</span>'
-          : '<span style="color: var(--status-wrong); font-size: 0.78rem; font-weight: 600; background: rgba(239, 68, 68, 0.12); padding: 2px 8px; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.25);">Incorrect</span>';
+          : '<span style="color: var(--status-wrong); font-size: 0.78rem; font-weight: 600; background: rgba(239, 68, 68, 0.12); padding: 2px 8px; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.25);">Retry Reset</span>';
       }
+
+      const historyBannerAll = buildHistoryBannerHtml(q, existingSol, isRevisitedWrongAll);
 
       return `
         <div class="q-summary-card" data-qid="${q.id}">
@@ -1736,6 +2102,8 @@
             </button>
           </div>
 
+          ${historyBannerAll}
+
           <div class="q-summary-body">${q.question}</div>
 
           ${q.image ? `
@@ -1747,19 +2115,44 @@
           ${optionsHtml}
 
           <div class="q-summary-footer">
-            <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <span class="ans-pill ${showAns ? '' : 'hidden'}" id="ans-${q.id}">
                 Official Key: <strong>${ansText}</strong>
               </span>
               <button class="btn btn-secondary btn-xs btn-toggle-single-ans" data-target="ans-${q.id}">
                 ${showAns ? 'Hide Key' : 'Reveal Key'}
               </button>
+              ${isJustEvaluatedAll && !existingSol.correct ? `<button class="btn btn-secondary btn-xs btn-retry-all-q" data-qid="${q.id}">🔄 Try Again</button>` : ''}
             </div>
             <span style="font-size: 0.75rem; color: var(--text-muted);">${q.difficulty}</span>
           </div>
         </div>
       `;
     }).join('');
+
+    // History expand toggles inside All PYQs
+    listContainer.querySelectorAll('.q-history-header').forEach(histHeader => {
+      histHeader.addEventListener('click', () => {
+        const banner = histHeader.closest('.q-history-banner');
+        const details = banner ? banner.querySelector('.q-history-details') : null;
+        const btnToggle = histHeader.querySelector('.btn-toggle-history-details');
+        const arrow = histHeader.querySelector('.history-arrow');
+        if (details) {
+          const isCollapsed = details.classList.toggle('collapsed');
+          if (btnToggle) btnToggle.setAttribute('aria-expanded', String(!isCollapsed));
+          if (arrow) arrow.textContent = isCollapsed ? '▼' : '▲';
+        }
+      });
+    });
+
+    // Try Again button on All PYQs cards
+    listContainer.querySelectorAll('.btn-retry-all-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const qid = btn.dataset.qid;
+        state.allPyqs.justEvaluatedQids.delete(qid);
+        renderAllQuestionsList();
+      });
+    });
 
     // Bookmarks in list
     listContainer.querySelectorAll('.q-bookmark-btn').forEach(btn => {
@@ -1792,27 +2185,9 @@
         if (!q) return;
 
         const isCorrect = q.correct_answer.includes(optIdx);
-        const prevSol = state.solvedQuestions[qid];
-        const prevWrongCount = prevSol ? (prevSol.wrongCount || 0) : 0;
-        const newWrongCount = isCorrect ? prevWrongCount : (prevWrongCount + 1);
+        recordQuestionAttempt(q, optIdx, isCorrect);
+        state.allPyqs.justEvaluatedQids.add(qid);
 
-        state.solvedQuestions[qid] = {
-          attempted: true,
-          correct: isCorrect,
-          studentAns: optIdx,
-          wrongCount: newWrongCount,
-          timestamp: Date.now()
-        };
-        setStorage(STORAGE_KEYS.SOLVED_STATE, state.solvedQuestions);
-        recordDailyActivity();
-
-        if (isCorrect) {
-          const xpGain = (q.marks * 10) + (prevWrongCount > 0 ? 15 : 0);
-          addXp(xpGain, 'Question Correct');
-          if (prevWrongCount > 0) triggerConfetti();
-        }
-
-        updateHeaderStats();
         renderAllQuestionsList();
         renderTodayMission();
       });
@@ -1844,27 +2219,9 @@
         const isCorrect = studentAns.length === q.correct_answer.length &&
                           studentAns.every((val, idx) => val === q.correct_answer[idx]);
 
-        const prevSol = state.solvedQuestions[qid];
-        const prevWrongCount = prevSol ? (prevSol.wrongCount || 0) : 0;
-        const newWrongCount = isCorrect ? prevWrongCount : (prevWrongCount + 1);
+        recordQuestionAttempt(q, studentAns, isCorrect);
+        state.allPyqs.justEvaluatedQids.add(qid);
 
-        state.solvedQuestions[qid] = {
-          attempted: true,
-          correct: isCorrect,
-          studentAns: studentAns,
-          wrongCount: newWrongCount,
-          timestamp: Date.now()
-        };
-        setStorage(STORAGE_KEYS.SOLVED_STATE, state.solvedQuestions);
-        recordDailyActivity();
-
-        if (isCorrect) {
-          const xpGain = (q.marks * 10) + (prevWrongCount > 0 ? 15 : 0);
-          addXp(xpGain, 'Question Correct');
-          if (prevWrongCount > 0) triggerConfetti();
-        }
-
-        updateHeaderStats();
         renderAllQuestionsList();
         renderTodayMission();
       });
@@ -1894,27 +2251,9 @@
         const max = q.correct_answer[1];
         const isCorrect = num >= (min - 1e-4) && num <= (max + 1e-4);
 
-        const prevSol = state.solvedQuestions[qid];
-        const prevWrongCount = prevSol ? (prevSol.wrongCount || 0) : 0;
-        const newWrongCount = isCorrect ? prevWrongCount : (prevWrongCount + 1);
+        recordQuestionAttempt(q, num, isCorrect);
+        state.allPyqs.justEvaluatedQids.add(qid);
 
-        state.solvedQuestions[qid] = {
-          attempted: true,
-          correct: isCorrect,
-          studentAns: num,
-          wrongCount: newWrongCount,
-          timestamp: Date.now()
-        };
-        setStorage(STORAGE_KEYS.SOLVED_STATE, state.solvedQuestions);
-        recordDailyActivity();
-
-        if (isCorrect) {
-          const xpGain = (q.marks * 10) + (prevWrongCount > 0 ? 15 : 0);
-          addXp(xpGain, 'Question Correct');
-          if (prevWrongCount > 0) triggerConfetti();
-        }
-
-        updateHeaderStats();
         renderAllQuestionsList();
         renderTodayMission();
       });
@@ -1946,6 +2285,7 @@
         const p = parseInt(btn.dataset.p, 10);
         if (p && !btn.classList.contains('disabled')) {
           state.allPyqs.page = p;
+          state.allPyqs.justEvaluatedQids.clear();
           renderAllQuestionsList();
           window.scrollTo({ top: 320, behavior: 'smooth' });
         }

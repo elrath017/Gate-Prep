@@ -1333,6 +1333,50 @@ button, input, select, textarea {
   text-align: right;
 }
 
+.mastery-topics-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.mastery-topic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.mastery-topic-pill:hover {
+  background: var(--accent-amber-soft);
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  transform: translateY(-1px);
+}
+
+.mastery-topic-pill-name {
+  font-weight: 500;
+}
+
+.mastery-topic-pill-pct {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-teal);
+  background: var(--accent-teal-soft);
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+}
+
 /* Subtopics Accordion & Filter Toolbar */
 .subtopic-filter-toolbar {
   display: flex;
@@ -1491,6 +1535,31 @@ button, input, select, textarea {
   cursor: pointer;
 }
 
+.topic-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.btn-practice-topic {
+  background: var(--accent-teal-soft);
+  color: var(--accent-teal);
+  border: 1px solid rgba(20, 184, 166, 0.3);
+  border-radius: var(--radius-xs);
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.btn-practice-topic:hover {
+  background: var(--accent-teal);
+  color: #0b1120;
+  border-color: var(--accent-teal);
+  transform: translateY(-1px);
+}
+
 .topic-meta-row {
   display: flex;
   align-items: center;
@@ -1498,11 +1567,21 @@ button, input, select, textarea {
   font-size: 0.72rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
+  flex-wrap: wrap;
 }
 
 .topic-badge-score {
   color: var(--accent-amber);
   font-weight: 700;
+}
+
+.topic-badge-weight {
+  color: var(--accent-teal);
+  font-weight: 700;
+}
+
+.topic-badge-subjweight {
+  color: var(--text-secondary);
 }
 
 .subtopic-details-box {
@@ -1527,6 +1606,17 @@ button, input, select, textarea {
   font-weight: 500;
 }
 
+.subtopic-pct-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-teal);
+  background: var(--accent-teal-soft);
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  margin-left: 2px;
+}
+
 .subtopic-imp-tag {
   font-size: 0.65rem;
   padding: 1px 5px;
@@ -1535,6 +1625,73 @@ button, input, select, textarea {
   color: var(--accent-amber);
   font-weight: 700;
   margin-left: auto;
+}
+
+.btn-subtopic-practice {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0 4px;
+  border-radius: var(--radius-xs);
+  transition: all var(--trans-fast);
+}
+
+.btn-subtopic-practice:hover {
+  color: var(--accent-amber);
+  border-color: var(--accent-amber);
+  background: var(--accent-amber-soft);
+}
+
+/* Syllabus Legend Strip */
+.syllabus-legend-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  align-items: center;
+}
+
+.legend-strip-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-badge-amber {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--accent-amber-soft);
+  color: var(--accent-amber);
+  border: 1px solid var(--accent-amber);
+}
+
+.legend-badge-star {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--accent-amber-soft);
+  color: var(--accent-amber);
+}
+
+.legend-badge-info {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--accent-teal-soft);
+  color: var(--accent-teal);
 }
 
 /* ==========================================================================
@@ -1867,6 +2024,294 @@ button, input, select, textarea {
   line-height: 1.6;
   border-top: 1px dashed var(--border-subtle);
   padding-top: var(--space-3);
+}
+
+/* Attempt History & Wrong-Answer Revisit Banner */
+.q-history-banner {
+  margin: var(--space-2) 0 var(--space-3) 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--status-wrong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  font-size: 0.82rem;
+}
+
+.q-history-banner.has-correct {
+  border-left-color: var(--status-correct);
+}
+
+.q-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-card);
+  transition: background var(--trans-fast);
+}
+
+.q-history-header:hover {
+  background: var(--bg-elevated);
+}
+
+.q-history-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.history-icon {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-amber);
+}
+
+.history-title {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.history-pill {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: var(--status-wrong-soft);
+  color: var(--status-wrong);
+  border: 1px solid var(--status-wrong-border);
+}
+
+.history-pill.resolved {
+  background: var(--status-correct-soft);
+  color: var(--status-correct);
+  border-color: var(--status-correct-border);
+}
+
+.history-last-ans {
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.btn-toggle-history-details {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btn-toggle-history-details:hover {
+  color: var(--text-primary);
+}
+
+.q-history-details {
+  padding: 10px 12px;
+  border-top: 1px dashed var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-surface);
+}
+
+.q-history-details.collapsed {
+  display: none;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-muted);
+}
+
+.history-item.wrong {
+  border-left: 2px solid var(--status-wrong);
+}
+
+.history-item.correct {
+  border-left: 2px solid var(--status-correct);
+}
+
+.history-attempt-num {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  min-width: 78px;
+}
+
+.history-ans-text {
+  color: var(--text-primary);
+  flex-grow: 1;
+}
+
+.history-status-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+}
+
+.history-status-tag.wrong {
+  background: var(--status-wrong-soft);
+  color: var(--status-wrong);
+}
+
+.history-status-tag.correct {
+  background: var(--status-correct-soft);
+  color: var(--status-correct);
+}
+
+.history-timestamp {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.feedback-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* Attempt History Drawer & Retry Badges */
+.q-history-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.q-history-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.q-history-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.q-badge.wrong-hist-badge {
+  background: var(--accent-amber-soft);
+  color: var(--accent-amber);
+  border: 1px solid var(--accent-amber-border);
+  font-weight: 600;
+}
+
+.btn-history-toggle {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 3px 9px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.btn-history-toggle:hover {
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+.q-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.q-history-list.hidden {
+  display: none;
+}
+
+.q-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border-left: 3px solid var(--status-wrong);
+}
+
+.q-history-row.is-correct {
+  border-left-color: var(--status-correct);
+}
+
+.q-history-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.history-attempt-num {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.history-ans-chip {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.history-outcome {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+}
+
+.history-outcome.wrong {
+  background: var(--status-wrong-soft);
+  color: var(--status-wrong);
+}
+
+.history-outcome.correct {
+  background: var(--status-correct-soft);
+  color: var(--status-correct);
+}
+
+.history-right-meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
 }
 
 .q-footer-actions {
